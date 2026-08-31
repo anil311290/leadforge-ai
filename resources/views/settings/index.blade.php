@@ -9,7 +9,7 @@
         <div class="card shadow-sm">
             <div class="card-header bg-white fw-bold">Key/Values</div>
             <div class="card-body">
-                <form method="POST" action="{{ route('settings.update') }}">
+                <form method="POST" action="{{ route('settings.update') }}" id="settingsForm">
                     @csrf
                     <div class="row g-3 mb-3">
                         <div class="col-md-6"><label class="form-label fw-semibold">Company name</label><input type="text" name="company_name" class="form-control" value="{{ $settings->where('key','company_name')->first()->value ?? config('leadforge.owner') }}"></div>
@@ -21,7 +21,7 @@
                                 <option value="0" @selected(($settings->where('key','email_require_approval')->first()->value ?? 1) == 0)>No — send immediately</option>
                             </select></div>
                     </div>
-                    <button class="btn btn-primary">Save settings</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Save settings</button>
                 </form>
             </div>
         </div>
@@ -39,4 +39,40 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.getElementById('settingsForm')?.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
+
+    const formData = new FormData(this);
+    const token = this.querySelector('input[name="_token"]').value;
+
+    fetch(this.action, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+        body: formData,
+    })
+    .then(res => {
+        if (res.redirected) { window.location.href = res.url; return; }
+        if (!res.ok) throw new Error('Server error');
+        return res.json();
+    })
+    .then(data => {
+        if (data && data.success) toastr.success(data.success);
+        else toastr.success('Settings saved successfully.');
+        btn.disabled = false;
+        btn.textContent = 'Save settings';
+    })
+    .catch(err => {
+        toastr.error('Failed to save settings: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Save settings';
+    });
+});
+</script>
 @endsection

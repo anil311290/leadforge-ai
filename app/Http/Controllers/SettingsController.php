@@ -31,6 +31,10 @@ class SettingsController extends Controller
 
         AuditService::record(auth()->user(), 'settings_updated', 'Setting');
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => 'Settings saved.']);
+        }
+
         return back()->with('success', 'Settings saved.');
     }
 }
