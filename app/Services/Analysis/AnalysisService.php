@@ -231,8 +231,49 @@ class AnalysisService
             'status' => Lead::STATUS_QUALIFIED,
             'analyzed_at' => now(),
         ]);
+
+        // Save contact details extracted by AI
+        if (! $lead->phone && ! empty($result['phone'])) {
+            $lead->phone = $result['phone'];
+        }
+        if (! $lead->email && ! empty($result['email'])) {
+            $lead->email = $result['email'];
+        }
+        if (! $lead->address && ! empty($result['address'])) {
+            $lead->address = $result['address'];
+        }
+
         $lead->markScoreClass();
         $lead->save();
+
+        // Save people/contacts from AI analysis
+        $contacts = $result['contacts'] ?? [];
+        if (! empty($contacts) && is_array($contacts)) {
+            foreach ($contacts as $person) {
+                if (empty($person['name']) && empty($person['email'])) {
+                    continue;
+                }
+                $exists = \App\Models\LeadContact::where('lead_id', $lead->id)
+                    ->where(function ($q) use ($person) {
+                        if (! empty($person['email'])) {
+                            $q->where('email', $person['email']);
+                        } elseif (! empty($person['name'])) {
+                            $q->where('name', $person['name']);
+                        }
+                    })->exists();
+
+                if (! $exists) {
+                    \App\Models\LeadContact::create([
+                        'lead_id' => $lead->id,
+                        'name' => $person['name'] ?? null,
+                        'role' => $person['role'] ?? $person['title'] ?? null,
+                        'email' => $person['email'] ?? null,
+                        'phone' => $person['phone'] ?? null,
+                        'is_primary' => ! \App\Models\LeadContact::where('lead_id', $lead->id)->exists(),
+                    ]);
+                }
+            }
+        }
 
         AiUsageLog::create([
             'user_id' => $lead->owner_id,

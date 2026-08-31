@@ -42,6 +42,22 @@ class ScanWebsite implements ShouldQueue
             return;
         }
 
+        // Re-scan prevention: skip if already scanned successfully
+        $existingScan = WebsiteScan::where('lead_id', $this->lead->id)
+            ->where('status', 'completed')
+            ->first();
+
+        if ($existingScan) {
+            Log::info("[Scan] Skipping {$this->lead->company} — already scanned successfully");
+            $this->lead->update(['status' => Lead::STATUS_ANALYZED]);
+
+            if ($this->lead->campaign?->auto_analysis_enabled) {
+                dispatch(new AnalyseLead($this->lead));
+            }
+
+            return;
+        }
+
         $scan = WebsiteScan::firstOrNew(['lead_id' => $this->lead->id]);
         $scan->lead_id = $this->lead->id;
         $scan->url = $this->lead->website ?: $this->lead->normalized_domain;
@@ -117,6 +133,9 @@ class ScanWebsite implements ShouldQueue
                 ]);
             }
 
+            // Extract contact details from business_data and update lead
+            $this->extractContacts($this->lead, $data['business_data'] ?? []);
+
             $this->lead->update(['status' => Lead::STATUS_ANALYZED]);
             $activities->log($this->lead->owner, 'analysis_completed', 'Lead', $this->lead->id, 'Website analysed for '.$this->lead->company);
 
@@ -157,5 +176,62 @@ class ScanWebsite implements ShouldQueue
             'progress' => min($percent, 99),
             'progress_message' => "Scanning & analysing: {$scanned}/{$total} websites processed",
         ]);
+    }
+
+    /**
+     * Extract contact details from crawled business_data and update the lead.
+     */
+    protected function extractContacts($lead, array $businessData): void
+    {
+        $updates = [];
+
+        // Extract phone
+        if (! $lead->phone && ! empty($businessData['phone'])) {
+            $updates['phone'] = $businessData['phone'];
+        }
+
+        // Extract email
+        if (! $lead->email && ! empty($businessData['email'])) {
+            $updates['email'] = $businessData['email'];
+        }
+
+        // Extract address
+        if (! $lead->address && ! empty($businessData['address'])) {
+            $updates['address'] = $businessData['address'];
+        }
+
+        if (! empty($updates)) {
+            $lead->update($updates);
+            Log::info("[Scan] Extracted contacts for {$lead->company}: ".json_encode($updates));
+        }
+
+        // Extract people/contacts from business_data
+        $people = $businessData['contacts'] ?? $businessData['people'] ?? [];
+        if (! empty($people) && is_array($people)) {
+            foreach ($people as $person) {
+                if (is_string($person)) {
+                    continue;
+                }
+                $existing = \App\Models\LeadContact::where('lead_id', $lead->id)
+                    ->where(function ($q) use ($person) {
+                        if (! empty($person['email'])) {
+                            $q->where('email', $person['email']);
+                        } elseif (! empty($person['name'])) {
+                            $q->where('name', $person['name']);
+                        }
+                    })->exists();
+
+                if (! $existing) {
+                    \App\Models\LeadContact::create([
+                        'lead_id' => $lead->id,
+                        'name' => $person['name'] ?? null,
+                        'role' => $person['role'] ?? $person['title'] ?? null,
+                        'email' => $person['email'] ?? null,
+                        'phone' => $person['phone'] ?? null,
+                        'is_primary' => ! \App\Models\LeadContact::where('lead_id', $lead->id)->exists(),
+                    ]);
+                }
+            }
+        }
     }
 }

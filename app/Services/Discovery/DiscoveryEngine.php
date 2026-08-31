@@ -8,6 +8,7 @@ use App\Models\Campaign;
 use App\Models\CampaignSource;
 use App\Models\Lead;
 use App\Services\ActivityService;
+use Illuminate\Support\Facades\Log;
 
 class DiscoveryEngine
 {
@@ -29,15 +30,18 @@ class DiscoveryEngine
     public function runForCampaign(Campaign $campaign): void
     {
         try {
+            Log::info("[Campaign {$campaign->id}] Discovery started");
             $this->activities->log($campaign->user, 'campaign_running', 'Campaign', $campaign->id, 'Discovery started');
             $this->setProgress($campaign, 5, 'Starting discovery…');
 
             [$leadsCreated, $duplicatesSkipped] = $this->discover($campaign);
 
+            Log::info("[Campaign {$campaign->id}] Discovery complete — ".count($leadsCreated)." leads, {$duplicatesSkipped} duplicates");
             $this->setProgress($campaign, 60, 'Discovery complete — '.count($leadsCreated).' leads found. Scanning websites…');
 
             foreach ($leadsCreated as $lead) {
                 if ($lead->normalized_domain) {
+                    Log::info("[Campaign {$campaign->id}] Queuing website scan for {$lead->company} ({$lead->normalized_domain})");
                     dispatch(new ScanWebsite($lead));
                 }
             }
@@ -51,6 +55,7 @@ class DiscoveryEngine
                 'completed_at' => now(),
             ]);
 
+            Log::info("[Campaign {$campaign->id}] Campaign completed");
             $this->activities->log(
                 $campaign->user,
                 'campaign_completed',
@@ -59,6 +64,7 @@ class DiscoveryEngine
                 sprintf('Discovered %d leads (%d duplicates skipped)', count($leadsCreated), $duplicatesSkipped)
             );
         } catch (\Throwable $e) {
+            Log::error("[Campaign {$campaign->id}] Discovery failed: ".$e->getMessage());
             $campaign->update(['status' => 'failed', 'error' => $e->getMessage(), 'progress_message' => 'Failed: '.$e->getMessage()]);
             $this->activities->log($campaign->user, 'campaign_failed', 'Campaign', $campaign->id, 'Discovery failed: '.$e->getMessage());
         }
@@ -66,6 +72,7 @@ class DiscoveryEngine
 
     protected function setProgress(Campaign $campaign, int $percent, string $message): void
     {
+        Log::info("[Campaign {$campaign->id}] {$percent}% — {$message}");
         $campaign->update([
             'progress' => $percent,
             'progress_message' => $message,
