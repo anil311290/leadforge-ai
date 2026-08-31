@@ -62,6 +62,34 @@ class CampaignController extends Controller
         return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign started. Discovery is running in the background.');
     }
 
+    public function progress(Campaign $campaign)
+    {
+        $this->authorize('view', $campaign);
+
+        $total = max($campaign->leads()->count(), 1);
+        $scanned = $campaign->leads()->whereHas('scans', fn ($q) => $q->where('status', 'completed'))->count();
+        $analysed = $campaign->leads()->whereNotNull('analyzed_at')->count();
+
+        return response()->json([
+            'status' => $campaign->status,
+            'progress' => (int) $campaign->progress,
+            'message' => $campaign->progress_message,
+            'error' => $campaign->error,
+            'leads' => [
+                'total' => $campaign->leads()->count(),
+                'scanned' => $scanned,
+                'analysed' => $analysed,
+            ],
+            'sources' => $campaign->sources()->get()->map(fn ($s) => [
+                'provider' => $s->provider,
+                'status' => $s->status,
+                'items_found' => $s->items_found,
+                'items_imported' => $s->items_imported,
+                'error' => $s->error,
+            ]),
+        ]);
+    }
+
     public function show(Campaign $campaign)
     {
         $this->authorize('view', $campaign);

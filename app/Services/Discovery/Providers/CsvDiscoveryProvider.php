@@ -25,10 +25,10 @@ class CsvDiscoveryProvider implements DiscoveryProvider
         }
 
         $handle = fopen($path, 'r');
-        $headers = fgetcsv($handle);
+        $headers = fgetcsv($handle, null, ',', '"', '\\');
         $results = [];
 
-        while (($row = fgetcsv($handle)) !== false) {
+        while (($row = fgetcsv($handle, null, ',', '"', '\\')) !== false) {
             if (count($row) !== count($headers)) {
                 continue;
             }

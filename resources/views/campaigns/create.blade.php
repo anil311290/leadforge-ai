@@ -25,7 +25,7 @@
                         <label class="form-label fw-semibold d-flex align-items-center gap-1">
                             <i class="bi bi-geo-alt text-primary"></i> Locations/Target Area <span class="text-danger">*</span>
                         </label>
-                        <input type="text" name="location" class="form-control form-control-lg" required
+                        <input type="text" name="location" class="form-control" required
                                placeholder="e.g. Mumbai, Pune, Bengaluru (SMEs &amp; Growing Companies)"
                                value="{{ old('location') }}">
                         <div class="form-text mt-1">

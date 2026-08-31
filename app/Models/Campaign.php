@@ -19,6 +19,8 @@ class Campaign extends Model
         'email_outreach_enabled',
         'auto_analysis_enabled',
         'status',
+        'progress',
+        'progress_message',
         'parameters',
         'error',
         'started_at',

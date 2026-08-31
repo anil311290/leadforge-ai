@@ -21,5 +21,16 @@ class AnalyseLead implements ShouldQueue
     public function handle(AnalysisService $service): void
     {
         $service->analyseLead($this->lead);
+
+        $campaign = $this->lead->campaign;
+        if ($campaign && in_array($campaign->status, ['running', 'paused'])) {
+            $total = max($campaign->leads()->count(), 1);
+            $analysed = $campaign->leads()->whereNotNull('analyzed_at')->count();
+
+            \App\Models\Campaign::where('id', $campaign->id)->update([
+                'progress' => min(85 + (int) round(($analysed / $total) * 14), 99),
+                'progress_message' => "Analysing opportunities: {$analysed}/{$total} leads scored",
+            ]);
+        }
     }
 }

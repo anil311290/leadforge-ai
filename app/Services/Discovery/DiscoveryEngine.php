@@ -30,8 +30,11 @@ class DiscoveryEngine
     {
         try {
             $this->activities->log($campaign->user, 'campaign_running', 'Campaign', $campaign->id, 'Discovery started');
+            $this->setProgress($campaign, 5, 'Starting discovery…');
 
             [$leadsCreated, $duplicatesSkipped] = $this->discover($campaign);
+
+            $this->setProgress($campaign, 60, 'Discovery complete — '.count($leadsCreated).' leads found. Scanning websites…');
 
             foreach ($leadsCreated as $lead) {
                 if ($lead->normalized_domain) {
@@ -39,8 +42,12 @@ class DiscoveryEngine
                 }
             }
 
+            $this->setProgress($campaign, 80, 'Website scans queued. Analysing opportunities…');
+
             $campaign->update([
                 'status' => 'completed',
+                'progress' => 100,
+                'progress_message' => 'Campaign completed — '.count($leadsCreated).' leads discovered.',
                 'completed_at' => now(),
             ]);
 
@@ -52,9 +59,17 @@ class DiscoveryEngine
                 sprintf('Discovered %d leads (%d duplicates skipped)', count($leadsCreated), $duplicatesSkipped)
             );
         } catch (\Throwable $e) {
-            $campaign->update(['status' => 'failed', 'error' => $e->getMessage()]);
+            $campaign->update(['status' => 'failed', 'error' => $e->getMessage(), 'progress_message' => 'Failed: '.$e->getMessage()]);
             $this->activities->log($campaign->user, 'campaign_failed', 'Campaign', $campaign->id, 'Discovery failed: '.$e->getMessage());
         }
+    }
+
+    protected function setProgress(Campaign $campaign, int $percent, string $message): void
+    {
+        $campaign->update([
+            'progress' => $percent,
+            'progress_message' => $message,
+        ]);
     }
 
     /**
@@ -71,10 +86,18 @@ class DiscoveryEngine
         $duplicates = 0;
         $limit = $campaign->max_businesses;
 
-        foreach ($providers as $provider) {
-            if (! $provider->isConfigured()) {
-                continue;
-            }
+        $enabledProviders = array_filter($providers, fn ($p) => $p->isConfigured());
+        $totalProviders = max(count($enabledProviders), 1);
+
+        foreach ($enabledProviders as $i => $provider) {
+            $base = 10; // provider progress starts at 10%
+            $span = 45; // providers span 10% -> 55%
+            $providerBase = $base + (int) round(($i / $totalProviders) * $span);
+            $providerEnd = $base + (int) round((($i + 1) / $totalProviders) * $span);
+
+            $label = str_replace('_', ' ', ucwords($provider->name()));
+
+            $this->setProgress($campaign, $providerBase, "Running provider «{$label}»…");
 
             $source = CampaignSource::create([
                 'campaign_id' => $campaign->id,
@@ -86,14 +109,21 @@ class DiscoveryEngine
                 $found = $provider->discover($campaign->location, [
                     'max' => $limit ?? 50,
                     'query' => $campaign->parameters['query'] ?? null,
+                    'path' => $campaign->parameters['path'] ?? null,
+                    'businesses' => $campaign->parameters['businesses'] ?? [],
                 ]);
 
                 $source->update(['items_found' => count($found)]);
+                $this->setProgress($campaign, $providerBase + 5, "{$label}: found ".count($found).' businesses — checking for duplicates…');
 
-                foreach ($found as $candidate) {
+                $total = max(count($found), 1);
+                foreach ($found as $idx => $candidate) {
                     if ($limit && count($leadsCreated) >= $limit) {
                         break 2;
                     }
+
+                    $progress = $providerBase + 5 + (int) round((($idx + 1) / $total) * ($providerEnd - $providerBase - 5));
+                    $this->setProgress($campaign, $progress, "{$label}: processing ".(int) ($idx + 1).' of '.count($found));
 
                     $match = $this->duplicates->findDuplicate($candidate, $campaign->id);
 

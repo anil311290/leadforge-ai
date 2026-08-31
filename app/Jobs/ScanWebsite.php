@@ -120,6 +120,8 @@ class ScanWebsite implements ShouldQueue
             $this->lead->update(['status' => Lead::STATUS_ANALYZED]);
             $activities->log($this->lead->owner, 'analysis_completed', 'Lead', $this->lead->id, 'Website analysed for '.$this->lead->company);
 
+            $this->updateScanProgress($this->lead);
+
             if ($this->lead->campaign?->auto_analysis_enabled) {
                 dispatch(new AnalyseLead($this->lead));
             }
@@ -128,5 +130,32 @@ class ScanWebsite implements ShouldQueue
             $scan->update(['status' => 'failed', 'error' => $e->getMessage(), 'scanned_at' => now()]);
             $this->lead->update(['status' => Lead::STATUS_ANALYZED, 'analysis' => ['error' => $e->getMessage()]]);
         }
+    }
+
+    /**
+     * Update campaign progress based on how many leads have been scanned.
+     */
+    protected function updateScanProgress($lead): void
+    {
+        $campaign = $lead->campaign;
+        if (! $campaign || ! in_array($campaign->status, ['running', 'paused'])) {
+            return;
+        }
+
+        $total = max($campaign->leads()->count(), 1);
+        $scanned = $campaign->leads()->whereHas('scans', fn ($q) => $q->where('status', 'completed'))->count();
+        $analysed = $campaign->leads()->whereNotNull('analyzed_at')->count();
+
+        // Scanning phase: 55% → 85%, Analysis phase: 85% → 100%
+        if ($campaign->auto_analysis_enabled) {
+            $percent = 55 + (int) round((($scanned / $total) * 30) + (($analysed / $total) * 15));
+        } else {
+            $percent = 55 + (int) round(($scanned / $total) * 45);
+        }
+
+        \App\Models\Campaign::where('id', $campaign->id)->update([
+            'progress' => min($percent, 99),
+            'progress_message' => "Scanning & analysing: {$scanned}/{$total} websites processed",
+        ]);
     }
 }
