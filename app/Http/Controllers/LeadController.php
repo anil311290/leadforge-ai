@@ -208,7 +208,7 @@ class LeadController extends Controller
     {
         $this->authorize('update', $lead);
         AuditService::record(auth()->user(), 'lead_deleted', 'Lead', $lead->id, null, ['company' => $lead->company]);
-        $lead->forceDelete();
+        $lead->delete();
 
         return redirect()->route('leads.index')->with('success', 'Lead deleted.');
     }
