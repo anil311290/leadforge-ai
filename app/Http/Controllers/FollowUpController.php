@@ -10,7 +10,7 @@ class FollowUpController extends Controller
 {
     public function index(Request $request)
     {
-        $followUps = FollowUp::with('lead')
+        $followUps = FollowUp::with(['lead' => fn ($q) => $q->withTrashed()])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
             ->orderByRaw("case when status='pending' and scheduled_at<=now() then 0 when status='pending' then 1 else 2 end")
             ->orderBy('scheduled_at')

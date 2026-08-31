@@ -20,7 +20,7 @@
             <tbody>
             @forelse($followUps as $fu)
                 <tr>
-                    <td><a href="{{ route('leads.show', $fu->lead) }}">{{ Str::limit($fu->lead->company, 30) }}</a></td>
+                    <td>@if($fu->lead)<a href="{{ route('leads.show', $fu->lead) }}">{{ Str::limit($fu->lead->company, 30) }}</a>@else<span class="text-muted">Deleted lead</span>@endif</td>
                     <td><span class="badge bg-dark text-white">{{ $fu->sequence_number }}</span></td>
                     <td class="small">{{ $fu->scheduled_at }}</td>
                     <td><span class="badge {{ $fu->status==='pending'?'text-bg-warning':'bg-light text-dark border' }}">{{ $fu->status }}</span></td>
