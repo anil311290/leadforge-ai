@@ -224,13 +224,9 @@
             liveAnalysed.textContent = data.leads.analysed;
         }
 
-        // Stop polling once finished
+        // Stop polling once finished — do NOT reload the page
         if (['completed','failed','cancelled'].includes(status)) {
             clearInterval(timer);
-            if (status === 'completed') {
-                // Refresh page once to show final data
-                setTimeout(() => window.location.reload(), 1500);
-            }
         }
     }
 
