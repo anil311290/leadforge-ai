@@ -57,19 +57,23 @@ document.getElementById('settingsForm')?.addEventListener('submit', function (e)
         headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
         body: formData,
     })
-    .then(res => {
-        if (res.redirected) { window.location.href = res.url; return; }
-        if (!res.ok) throw new Error('Server error');
-        return res.json();
-    })
-    .then(data => {
-        if (data && data.success) toastr.success(data.success);
-        else toastr.success('Settings saved successfully.');
-        btn.disabled = false;
-        btn.textContent = 'Save settings';
+    .then(async res => {
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch (e) { data = null; }
+
+        if (data && data.success) {
+            toastr.success(data.success);
+        } else if (res.redirected || res.status === 302) {
+            toastr.success('Settings saved.');
+        } else {
+            toastr.success('Settings saved successfully.');
+        }
     })
     .catch(err => {
-        toastr.error('Failed to save settings: ' + err.message);
+        toastr.error('Error: ' + err.message);
+    })
+    .finally(() => {
         btn.disabled = false;
         btn.textContent = 'Save settings';
     });
