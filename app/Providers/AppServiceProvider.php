@@ -1,7 +1,9 @@
 <?php
 namespace App\Providers;
 
+use App\Models\Campaign;
 use App\Models\Lead;
+use App\Policies\CampaignPolicy;
 use App\Policies\LeadPolicy;
 use App\Services\Discovery\DiscoveryManager;
 use Illuminate\Support\Facades\Gate;
@@ -24,5 +26,6 @@ class AppServiceProvider extends ServiceProvider
     {
         DiscoveryManager::boot();
         Gate::policy(Lead::class, LeadPolicy::class);
+        Gate::policy(Campaign::class, CampaignPolicy::class);
     }
 }

@@ -10,6 +10,11 @@ use Illuminate\Http\Request;
 
 class CampaignController extends Controller
 {
+    public function __construct(
+        protected DiscoveryEngine $engine
+    ) {
+    }
+
     public function index()
     {
         $campaigns = Campaign::withCount(['leads as leads_count'])
@@ -51,7 +56,7 @@ class CampaignController extends Controller
         if (config('queue.default') !== 'sync') {
             DiscoveryEngine::start($campaign);
         } else {
-            (new DiscoveryEngine())->runForCampaign($campaign);
+            $this->engine->runForCampaign($campaign);
         }
 
         return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign started. Discovery is running in the background.');
@@ -102,7 +107,7 @@ class CampaignController extends Controller
         AuditService::record(auth()->user(), 'campaign_resumed', 'Campaign', $campaign->id);
 
         if (config('app.env') !== 'testing' && config('queue.default') === 'sync') {
-            (new DiscoveryEngine())->start($campaign);
+            $this->engine->runForCampaign($campaign);
         }
 
         return back()->with('success', 'Campaign resumed.');
