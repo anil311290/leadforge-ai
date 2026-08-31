@@ -33,6 +33,8 @@
         .text-emerald{color:#10b981}
         .bg-emerald{background-color:#10b981}
         .dropdown-menu{font-size:.9rem}
+        .campaign-card{transition:transform .15s,box-shadow .15s}
+        .campaign-card:hover{transform:translateY(-2px);box-shadow:0 .5rem 1rem rgba(0,0,0,.08)!important}
         @media(max-width:991px){.sidebar{transform:translateX(-100%)}.sidebar.show{transform:translateX(0)}.main{margin-left:0}}
     </style>
 </head>
