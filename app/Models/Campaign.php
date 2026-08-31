@@ -55,6 +55,11 @@ class Campaign extends Model
         return $this->hasMany(Lead::class);
     }
 
+    public function activities()
+    {
+        return $this->hasMany(Activity::class);
+    }
+
     public function scopeOpen($query)
     {
         return $query->whereIn('status', ['running', 'paused']);

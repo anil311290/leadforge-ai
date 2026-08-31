@@ -98,6 +98,25 @@
 </div>
 
 <div class="row g-3 mb-4">
+    {{-- Process Timeline --}}
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-diagram-3 text-primary"></i> Process Timeline
+                    <span class="badge bg-light text-muted border fw-normal ms-1 small" id="timelineCount">0 steps</span>
+                </h6>
+                <div id="timelineContainer">
+                    <div class="text-center text-muted small py-3" id="timelineEmpty">
+                        <i class="bi bi-hourglass-split me-1"></i> Waiting for process to start…
+                    </div>
+                    <div class="timeline d-none" id="timelineList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Stat tiles --}}
     @php
         $tiles = [
             ['Businesses discovered', $stats['businesses_discovered'], 'bi-building', 'primary'],
@@ -153,6 +172,7 @@
     .stage-dot.active{background:#1e6fd9;color:#fff;box-shadow:0 0 0 4px rgba(30,111,217,.15)}
     .stage-dot.done{background:#10b981;color:#fff}
     #progressBar{transition:width .6s ease}
+    .timeline{max-height:300px;overflow-y:auto}
 </style>
 <script>
 (function(){
@@ -177,7 +197,60 @@
         if (state) el.classList.add(state);
     }
 
+    // Timeline
+    const timelineList = document.getElementById('timelineList');
+    const timelineEmpty = document.getElementById('timelineEmpty');
+    const timelineCount = document.getElementById('timelineCount');
+    const seenTimeline = new Set();
+
+    function renderTimeline(entries){
+        if (!entries || !entries.length) return;
+
+        timelineEmpty?.classList.add('d-none');
+        timelineList?.classList.remove('d-none');
+
+        let newItems = 0;
+        entries.forEach(entry => {
+            const key = entry.type + '_' + entry.created_at;
+            if (seenTimeline.has(key)) return;
+            seenTimeline.add(key);
+            newItems++;
+
+            const icons = {
+                'campaign_running': 'bi-play-circle text-primary',
+                'campaign_completed': 'bi-check-circle-fill text-success',
+                'campaign_failed': 'bi-x-circle-fill text-danger',
+                'lead_discovered': 'bi-building text-info',
+                'analysis_completed': 'bi-motherboard text-warning',
+                'email_generated': 'bi-envelope-paper text-primary',
+                'email_sent': 'bi-send-check text-success',
+                'reply_received': 'bi-reply-all text-info',
+                'follow_up_due': 'bi-alarm text-warning',
+                'status_changed': 'bi-arrow-left-right text-secondary',
+            };
+            const icon = icons[entry.type] || 'bi-record-circle text-muted';
+
+            const div = document.createElement('div');
+            div.className = 'd-flex align-items-start gap-3 py-2 border-bottom';
+            div.innerHTML = `
+                <div class="mt-1"><i class="bi ${icon} fs-6"></i></div>
+                <div class="flex-grow-1">
+                    <div class="fw-medium small">${entry.title || entry.type.replace(/_/g, ' ')}</div>
+                    <div class="text-muted small"><i class="bi bi-clock me-1"></i>${entry.time}</div>
+                </div>
+            `;
+            timelineList?.prepend(div);
+        });
+
+        if (newItems > 0 && timelineCount) {
+            timelineCount.textContent = seenTimeline.size + ' steps';
+        }
+    }
+
     function update(data){
+        // Timeline
+        if (data.timeline) renderTimeline(data.timeline);
+
         bar.style.width = data.progress + '%';
         pct.textContent = data.progress + '%';
 

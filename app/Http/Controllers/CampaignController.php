@@ -70,6 +70,18 @@ class CampaignController extends Controller
         $scanned = $campaign->leads()->whereHas('scans', fn ($q) => $q->where('status', 'completed'))->count();
         $analysed = $campaign->leads()->whereNotNull('analyzed_at')->count();
 
+        // Build timeline from activities
+        $activities = $campaign->activities()
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get()
+            ->map(fn ($a) => [
+                'type' => $a->type,
+                'title' => $a->title,
+                'time' => $a->created_at->diffForHumans(),
+                'created_at' => $a->created_at->toIso8601String(),
+            ]);
+
         return response()->json([
             'status' => $campaign->status,
             'progress' => (int) $campaign->progress,
@@ -87,6 +99,7 @@ class CampaignController extends Controller
                 'items_imported' => $s->items_imported,
                 'error' => $s->error,
             ]),
+            'timeline' => $activities,
         ]);
     }
 
