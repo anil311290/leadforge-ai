@@ -29,9 +29,9 @@
                 <li><a class="dropdown-item" href="{{ route('opportunities.show', $lead) }}"><i class="bi bi-lightning-charge me-2"></i>Opportunity view</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
-                    <form method="POST" action="{{ route('leads.destroy', $lead) }}" onsubmit="return confirm('Delete this lead?');">
+                    <form method="POST" action="{{ route('leads.destroy', $lead) }}" class="delete-form" data-confirm="Delete this lead?">
                         @csrf @method('DELETE')
-                        <button class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i>Delete</button>
+                        <button class="dropdown-item text-danger" type="button" onclick="confirmDelete(this)"><i class="bi bi-trash me-2"></i>Delete</button>
                     </form>
                 </li>
             </ul>

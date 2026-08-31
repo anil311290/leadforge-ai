@@ -44,9 +44,9 @@
                     <td class="small"><code>{{ $rule->keyword ?? '—' }}</code></td>
                     <td class="small">{{ $rule->weight }}</td>
                     <td>
-                        <form method="POST" action="{{ route('services.rules.destroy', [$service, $rule]) }}" onsubmit="return confirm('Delete rule?');">
+                        <form method="POST" action="{{ route('services.rules.destroy', [$service, $rule]) }}" class="delete-form" data-confirm="Delete rule?">
                             @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                            <button class="btn btn-sm btn-light text-danger" type="button" onclick="confirmDelete(this)"><i class="bi bi-trash"></i></button>
                         </form>
                     </td>
                 </tr>

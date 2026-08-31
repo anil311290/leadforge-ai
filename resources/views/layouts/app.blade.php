@@ -78,8 +78,8 @@
         </div>
     </nav>
     <div class="p-3 p-md-4">
-        @if(session('success'))<div class="alert alert-success py-2"><i class="bi bi-check-circle me-1"></i>{{ session('success') }}</div>@endif
-        @if(session('error'))<div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle me-1"></i>{{ session('error') }}</div>@endif
+        @if(session('success'))<div class="alert alert-success py-2 d-none" id="flash-success" data-msg="{{ session('success') }}"><i class="bi bi-check-circle me-1"></i>{{ session('success') }}</div>@endif
+        @if(session('error'))<div class="alert alert-danger py-2 d-none" id="flash-error" data-msg="{{ session('error') }}"><i class="bi bi-exclamation-triangle me-1"></i>{{ session('error') }}</div>@endif
         @yield('content')
     </div>
     <footer class="text-center text-muted small py-3">© {{ date('Y') }} {{ config('leadforge.owner') }} · {{ config('leadforge.tagline') }}</footer>
@@ -87,6 +87,45 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/toastr.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/toastr.min.css">
+<script>
+// Toastr defaults
+toastr.options = {
+    closeButton: true,
+    progressBar: true,
+    positionClass: 'toast-top-right',
+    timeOut: 4000,
+    extendedTimeOut: 2000,
+};
+
+// Show flash messages as toastr
+document.addEventListener('DOMContentLoaded', function () {
+    const success = document.getElementById('flash-success');
+    const error = document.getElementById('flash-error');
+    if (success) toastr.success(success.dataset.msg);
+    if (error) toastr.error(error.dataset.msg);
+});
+
+// Global SweetAlert2 delete confirmation
+function confirmDelete(btn) {
+    const form = btn.closest('form');
+    const msg = form.dataset.confirm || 'Are you sure?';
+    Swal.fire({
+        title: 'Confirm',
+        text: msg,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
+}
+</script>
 @yield('scripts')
-</body>
-</html>
