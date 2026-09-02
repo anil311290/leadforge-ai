@@ -89,6 +89,7 @@ Route::middleware('auth')->group(function () {
     // Follow-ups
     Route::get('followups', [FollowUpController::class, 'index'])->name('followups.index');
     Route::post('followups/{followUp}/complete', [FollowUpController::class, 'complete'])->name('followups.complete');
+    Route::post('followups/trigger/{lead}', [FollowUpController::class, 'trigger'])->name('followups.trigger');
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

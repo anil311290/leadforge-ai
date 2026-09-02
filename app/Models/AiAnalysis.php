@@ -46,7 +46,7 @@ class AiAnalysis extends Model
 
     public function scan()
     {
-        return $this->belongsTo(WebsiteScan::class);
+        return $this->belongsTo(WebsiteScan::class, 'scan_id');
     }
 
     public function promptVersion()

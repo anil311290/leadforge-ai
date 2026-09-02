@@ -6,11 +6,11 @@ use App\Models\EmailAccount;
 use App\Models\EmailMessage;
 use App\Services\ActivityService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
- * Abstraction over an email transport. Gmail/Microsoft/SMTP config is stored
- * per EmailAccount; if none is configured, messages record as "sent" in the
- * pipeline for follow-up sequencing (transport is configured in production).
+ * Sends emails via Laravel's Mail system using SMTP config from .env.
+ * Falls back to marking as "sent" if no mailer is configured.
  */
 class MailService
 {
@@ -20,7 +20,8 @@ class MailService
 
     public function isConfigured(): bool
     {
-        return EmailAccount::where('is_active', true)->exists();
+        return EmailAccount::where('is_active', true)->exists()
+            || config('mail.mailers.smtp.host') !== null;
     }
 
     public function send(EmailMessage $email): void
@@ -31,16 +32,44 @@ class MailService
                 return;
             }
 
-            // In a real deployment this dispatches to the configured transport
-            // (Google/Microsoft OAuth or SMTP). Here we persist delivery state.
-            $email->update([
-                'status' => 'sent',
-                'delivery_status' => 'sent',
-                'sent_at' => now(),
-            ]);
+            $fromEmail = config('mail.from.address');
+            $fromName = config('mail.from.name');
+
+            if ($fromEmail && config('mail.default') !== 'log') {
+                // Send via SMTP
+                Mail::html($email->body, function ($message) use ($email, $fromEmail, $fromName) {
+                    $message->to($email->lead->email)
+                        ->subject($email->subject)
+                        ->from($fromEmail, $fromName);
+                });
+
+                $email->update([
+                    'status' => 'sent',
+                    'delivery_status' => 'sent',
+                    'sent_at' => now(),
+                ]);
+
+                Log::info('[Mail] Email sent via SMTP', [
+                    'to' => $email->lead->email,
+                    'subject' => $email->subject,
+                    'from' => $fromEmail,
+                ]);
+            } else {
+                // Log mode or no SMTP — mark as sent in pipeline
+                Log::info('[Mail] Email logged (no SMTP)', [
+                    'to' => $email->lead->email,
+                    'subject' => $email->subject,
+                    'from' => $fromEmail ?? 'not set',
+                ]);
+
+                $email->update([
+                    'status' => 'sent',
+                    'delivery_status' => 'sent',
+                    'sent_at' => now(),
+                ]);
+            }
 
             $this->activities->log($email->lead->owner, 'email_sent', 'EmailMessage', $email->id, 'Outreach email sent to '.$email->lead->company);
-
             $this->scheduleFollowUp($email);
         } catch (\Throwable $e) {
             Log::error('Email send failed', ['email' => $email->id, 'error' => $e->getMessage()]);

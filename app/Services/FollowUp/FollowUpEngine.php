@@ -67,7 +67,7 @@ class FollowUpEngine
             'subject' => 'Re: '.($lead->company).' — quick question',
             'body' => $followUp->content,
             'to_email' => $lead->email,
-            'from_email' => config('leadforge.email.from_email'),
+            'from_email' => config('mail.from.address', config('leadforge.email.from_email')),
             'status' => 'sent',
             'delivery_status' => 'sent',
             'sent_at' => now(),

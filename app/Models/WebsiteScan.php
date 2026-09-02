@@ -55,21 +55,21 @@ class WebsiteScan extends Model
 
     public function pages()
     {
-        return $this->hasMany(WebsitePage::class);
+        return $this->hasMany(WebsitePage::class, 'scan_id');
     }
 
     public function technologies()
     {
-        return $this->hasMany(WebsiteTechnology::class);
+        return $this->hasMany(WebsiteTechnology::class, 'scan_id');
     }
 
     public function signals()
     {
-        return $this->hasMany(WebsiteScanSignal::class);
+        return $this->hasMany(WebsiteScanSignal::class, 'scan_id');
     }
 
     public function analyses()
     {
-        return $this->hasMany(AiAnalysis::class);
+        return $this->hasMany(AiAnalysis::class, 'scan_id');
     }
 }

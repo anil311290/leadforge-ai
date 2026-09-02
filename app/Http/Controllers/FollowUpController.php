@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\FollowUp;
+use App\Models\Lead;
 use App\Services\AuditService;
+use App\Services\FollowUp\FollowUpEngine;
 use Illuminate\Http\Request;
 
 class FollowUpController extends Controller
@@ -31,5 +33,19 @@ class FollowUpController extends Controller
         AuditService::record(auth()->user(), 'followup_completed', 'FollowUp', $followUp->id);
 
         return back()->with('success', 'Follow-up marked completed.');
+    }
+
+    /**
+     * Manually trigger a follow-up for a lead.
+     */
+    public function trigger(Request $request, Lead $lead)
+    {
+        $this->authorize('update', $lead);
+
+        FollowUpEngine::scheduleNext((int) $lead->id);
+
+        AuditService::record(auth()->user(), 'followup_triggered', 'Lead', $lead->id, null, ['company' => $lead->company]);
+
+        return back()->with('success', 'Follow-up scheduled for '.$lead->company.'.');
     }
 }

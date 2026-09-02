@@ -40,6 +40,10 @@ class EmailController extends Controller
 
     public function generate(Request $request, Lead $lead)
     {
+        if (! $lead->email) {
+            return back()->with('error', 'Cannot generate email — no email address known for '.$lead->company.'.');
+        }
+
         dispatch(new GenerateEmail($lead))->onQueue('emails');
 
         return back()->with('success', 'Email draft generation queued for '.$lead->company.'.');

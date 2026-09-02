@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class WebsiteScanSignal extends Model
 {
+    protected $table = 'website_signals';
+
     protected $fillable = [
         'scan_id',
         'signal',

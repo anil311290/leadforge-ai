@@ -35,7 +35,31 @@ class CampaignController extends Controller
             'max_businesses' => ['nullable', 'integer', 'min:1', 'max:500'],
             'email_outreach_enabled' => ['nullable', 'boolean'],
             'auto_analysis_enabled' => ['nullable', 'boolean'],
+            'businesses' => ['nullable', 'string'],
+            'sources' => ['nullable', 'array'],
+            'sources.*' => ['string', 'in:manual_urls,csv,ai_web_search,search_api'],
         ]);
+
+        $businessLines = [];
+        foreach (explode("\n", $data['businesses'] ?? '') as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            // If line looks like a URL, treat as website
+            if (str_starts_with($line, 'http://') || str_starts_with($line, 'https://') || str_contains($line, '.')) {
+                $businessLines[] = ['name' => $line, 'website' => $line];
+            } else {
+                $businessLines[] = ['name' => $line];
+            }
+        }
+
+        // Determine which providers to use
+        $selectedSources = $data['sources'] ?? [];
+        if (empty($selectedSources)) {
+            // Default: use AI web search + manual URLs
+            $selectedSources = ['ai_web_search', 'manual_urls'];
+        }
 
         $campaign = Campaign::create([
             'user_id' => auth()->id(),
@@ -46,6 +70,7 @@ class CampaignController extends Controller
             'max_businesses' => $data['max_businesses'] ?? null,
             'email_outreach_enabled' => $request->boolean('email_outreach_enabled'),
             'auto_analysis_enabled' => $request->boolean('auto_analysis_enabled'),
+            'parameters' => ['businesses' => $businessLines, 'sources' => $selectedSources],
             'status' => 'running',
             'started_at' => now(),
         ]);

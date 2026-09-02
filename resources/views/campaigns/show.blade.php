@@ -162,7 +162,42 @@
             </tbody>
         </table>
     </div>
-    @if($leads->hasPages())<div class="card-footer">{{ $leads->links() }}</div>@endif
+    @if($leads->hasPages())
+        <div class="card-footer border-top-0 py-3">
+            <nav aria-label="Leads pagination">
+                <ul class="pagination pagination-sm justify-content-center mb-0 gap-1">
+                    {{-- Previous --}}
+                    @if ($leads->onFirstPage())
+                        <li class="page-item disabled">
+                            <span class="page-link border rounded px-3 py-1 small text-muted bg-light"><i class="bi bi-chevron-left"></i> Previous</span>
+                        </li>
+                    @else
+                        <li class="page-item">
+                            <a class="page-link border rounded px-3 py-1 small text-dark bg-white" href="{{ $leads->previousPageUrl() }}" rel="prev"><i class="bi bi-chevron-left"></i> Previous</a>
+                        </li>
+                    @endif
+
+                    {{-- Page numbers --}}
+                    @foreach ($leads->getUrlRange(max(1, $leads->currentPage() - 2), min($leads->lastPage(), $leads->currentPage() + 2)) as $page => $url)
+                        <li class="page-item {{ $page === $leads->currentPage() ? 'active' : '' }}">
+                            <a class="page-link border rounded px-3 py-1 small {{ $page === $leads->currentPage() ? 'bg-primary text-white border-primary' : 'bg-white text-dark' }}" href="{{ $url }}">{{ $page }}</a>
+                        </li>
+                    @endforeach
+
+                    {{-- Next --}}
+                    @if ($leads->hasMorePages())
+                        <li class="page-item">
+                            <a class="page-link border rounded px-3 py-1 small text-dark bg-white" href="{{ $leads->nextPageUrl() }}" rel="next">Next <i class="bi bi-chevron-right"></i></a>
+                        </li>
+                    @else
+                        <li class="page-item disabled">
+                            <span class="page-link border rounded px-3 py-1 small text-muted bg-light">Next <i class="bi bi-chevron-right"></i></span>
+                        </li>
+                    @endif
+                </ul>
+            </nav>
+        </div>
+    @endif
 </div>
 @endsection
 

@@ -73,10 +73,15 @@ class AiClient
             throw new \RuntimeException('AI API error '.$response->status().': '.$response->body());
         }
 
-        $content = data_get($response->json('choices.0.message.content'), 0, null);
+        $content = $response->json('choices.0.message.content');
 
-        if (is_array($content)) {
-            $content = $content['content'] ?? json_encode($content);
+        // Handle case where content might be wrapped in markdown code fences
+        if (is_string($content)) {
+            $content = trim($content);
+            // Strip markdown code fences if present
+            if (preg_match('/^```(?:json)?\s*\n?(.*?)\n?```$/s', $content, $m)) {
+                $content = trim($m[1]);
+            }
         }
 
         return (string) $content;

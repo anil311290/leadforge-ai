@@ -15,8 +15,9 @@ return [
             'search_api' => 'App\\Services\\Discovery\\Providers\\SearchApiDiscoveryProvider',
             'manual_urls' => 'App\\Services\\Discovery\\Providers\\ManualUrlDiscoveryProvider',
             'csv' => 'App\\Services\\Discovery\\Providers\\CsvDiscoveryProvider',
+            'ai_web_search' => 'App\\Services\\Discovery\\Providers\\AiWebSearchProvider',
         ],
-        'enabled_providers' => ['manual_urls', 'csv'],
+        'enabled_providers' => ['manual_urls', 'csv', 'ai_web_search'],
         'search_api' => [
             'endpoint' => env('LF_DISCOVERY_ENDPOINT'),
             'api_key' => env('LF_DISCOVERY_API_KEY'),

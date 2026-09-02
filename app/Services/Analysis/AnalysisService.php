@@ -28,35 +28,43 @@ class AnalysisService
     {
         $scan = $scan ?: $lead->latestScan;
 
-        if (! $scan) {
-            $lead->update(['status' => Lead::STATUS_ANALYZED]);
-            $this->activities->log($lead->owner, 'analysis_completed', 'Lead', $lead->id, 'No website to analyse for '.$lead->company);
-
-            return;
-        }
+        // Treat failed scans or scans with no data as "no scan"
+        $hasUsableScan = $scan && $scan->status === 'completed' && $scan->data_quality > 0;
 
         $start = microtime(true);
 
         try {
-            $result = $this->ai->isConfigured()
-                ? $this->runAiAnalysis($lead)
-                : $this->runHeuristicAnalysis($lead);
+            $result = $this->ai->isConfigured() && $hasUsableScan
+                ? $this->runAiAnalysis($lead, $scan)
+                : $this->runHeuristicAnalysis($lead, $hasUsableScan ? $scan : null);
 
             if (empty($result['recommendations']) && $this->ai->isConfigured()) {
-                $result['recommendations'] = $this->runHeuristicAnalysis($lead)['recommendations'];
+                $result['recommendations'] = $this->runHeuristicAnalysis($lead, null)['recommendations'];
             }
 
-            $this->persist($lead, $scan, $result, round((microtime(true) - $start) * 1000));
+            $this->persist($lead, $hasUsableScan ? $scan : null, $result, round((microtime(true) - $start) * 1000));
             $this->activities->log($lead->owner, 'analysis_completed', 'Lead', $lead->id, 'Analysis completed for '.$lead->company);
         } catch (\Throwable $e) {
             Log::error('Lead analysis failed', ['lead' => $lead->id, 'error' => $e->getMessage()]);
-            $lead->update(['status' => Lead::STATUS_ANALYZED, 'analysis' => ['error' => $e->getMessage()]]);
+            // Fallback to heuristic even on AI failure
+            try {
+                $result = $this->runHeuristicAnalysis($lead, null);
+                $this->persist($lead, null, $result, round((microtime(true) - $start) * 1000));
+            } catch (\Throwable $e2) {
+                Log::error('Heuristic analysis also failed', ['lead' => $lead->id, 'error' => $e2->getMessage()]);
+                $lead->update(['status' => Lead::STATUS_ANALYZED, 'analysis' => ['error' => $e->getMessage()]]);
+            }
         }
     }
 
-    protected function runAiAnalysis(Lead $lead): array
+    protected function runAiAnalysis(Lead $lead, ?WebsiteScan $scan = null): array
     {
-        $built = $this->prompts->build($lead->latestScan);
+        if (! $scan) {
+            // No scan data — use lead data only
+            return $this->runHeuristicAnalysis($lead, null);
+        }
+
+        $built = $this->prompts->build($scan);
 
         $raw = $this->ai->complete('You are an exact business analysis engine.', $built['content'], [
             'max_tokens' => (int) config('leadforge.ai.max_tokens', 2000),
@@ -79,9 +87,73 @@ class AnalysisService
         ];
     }
 
-    protected function runHeuristicAnalysis(Lead $lead): array
+    protected function runHeuristicAnalysis(Lead $lead, ?WebsiteScan $scan = null): array
     {
-        $scan = $lead->latestScan;
+        if (! $scan) {
+            // No scan data — score based on lead info alone, with basic service matching
+            $services = Service::where('is_active', true)->get();
+            $recommendations = [];
+            $industry = strtolower($lead->industry ?? '');
+
+            foreach ($services as $service) {
+                $score = 0;
+                $evidence = [];
+
+                // Match service name/category against lead industry
+                $serviceKeywords = strtolower($service->name.' '.$service->category);
+                if ($industry && (
+                    str_contains($serviceKeywords, $industry)
+                    || str_contains($industry, strtolower($service->category))
+                )) {
+                    $score = 40;
+                    $evidence[] = 'Industry match: '.$lead->industry;
+                }
+
+                // Generic services always get a base score
+                if (in_array($service->slug, ['custom-software', 'website-e-commerce', 'crm-automation'])) {
+                    $score = max($score, 25);
+                    if (empty($evidence)) {
+                        $evidence[] = 'Common service for growing businesses';
+                    }
+                }
+
+                if ($score > 0) {
+                    [$min, $max] = array_values($this->values->estimate($service, ['digital_maturity' => 30]));
+                    $recommendations[] = [
+                        'service' => $service->name,
+                        'service_name' => $service->name,
+                        'service_id' => $service->id,
+                        'score' => $score,
+                        'confidence' => 30,
+                        'evidence' => $evidence,
+                        'inference' => 'Based on lead profile (no website scan)',
+                        'recommendation' => 'Consider outreach to discuss '.$service->name.' needs.',
+                        'estimated_min' => $min,
+                        'estimated_max' => $max,
+                    ];
+                }
+            }
+
+            // Sort by score descending
+            usort($recommendations, fn($a, $b) => $b['score'] <=> $a['score']);
+
+            $topScore = $recommendations[0]['score'] ?? 0;
+
+            return [
+                'score' => $topScore,
+                'confidence' => 30,
+                'data_quality' => 20,
+                'digital_maturity' => 30,
+                'industry' => $lead->industry,
+                'business_model' => null,
+                'summary' => 'Basic analysis based on lead data (no website scan available).',
+                'recommendations' => $recommendations,
+                'raw_input' => null,
+                'provider' => null,
+                'model' => null,
+            ];
+        }
+
         $opportunities = $this->scorer->score($scan);
 
         $recommendations = [];
@@ -158,14 +230,14 @@ class AnalysisService
         ];
     }
 
-    protected function persist(Lead $lead, WebsiteScan $scan, array $result, int $durationMs): void
+    protected function persist(Lead $lead, ?WebsiteScan $scan, array $result, int $durationMs): void
     {
         $top = $result['recommendations'][0] ?? null;
         $leadScore = $result['score'] ?? ($top['score'] ?? 0);
 
         $analysis = AiAnalysis::create([
             'lead_id' => $lead->id,
-            'scan_id' => $scan->id,
+            'scan_id' => $scan?->id,
             'model' => $result['model'] ?? null,
             'provider' => $result['provider'] ?? null,
             'input' => ['prompt' => $result['raw_input']],
@@ -279,8 +351,8 @@ class AnalysisService
             'user_id' => $lead->owner_id,
             'lead_id' => $lead->id,
             'campaign_id' => $lead->campaign_id,
-            'provider' => $result['provider'],
-            'model' => $result['model'],
+            'provider' => $result['provider'] ?? 'heuristic',
+            'model' => $result['model'] ?? 'rule-based',
             'prompt_name' => 'opportunity_analysis',
             'operation' => 'analyse_lead',
             'status' => 'completed',

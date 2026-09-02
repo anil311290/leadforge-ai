@@ -88,11 +88,102 @@
                         </div>
                     </div>
 
+                    <!-- Discovery Sources -->
+                    <div class="mb-4 p-3 bg-light rounded-3">
+                        <label class="form-label fw-semibold d-flex align-items-center gap-1 mb-3">
+                            <i class="bi bi-search text-primary"></i> Discovery Sources <span class="text-danger">*</span>
+                        </label>
+                        <p class="small text-muted mb-3">Choose where to find leads. AI Web Search automatically finds businesses matching your target area.</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check border rounded-3 p-3 bg-white">
+                                    <input class="form-check-input" type="checkbox" name="sources[]" value="ai_web_search" id="src-ai" checked>
+                                    <label class="form-check-label fw-semibold" for="src-ai">
+                                        <i class="bi bi-robot text-primary me-1"></i> AI Web Search
+                                    </label>
+                                    <div class="small text-muted mt-1">Automatically finds businesses using AI — just tell us location &amp; industry. Like Google + LinkedIn search combined.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check border rounded-3 p-3 bg-white">
+                                    <input class="form-check-input" type="checkbox" name="sources[]" value="manual_urls" id="src-manual" checked>
+                                    <label class="form-check-label fw-semibold" for="src-manual">
+                                        <i class="bi bi-pencil-square text-success me-1"></i> Manual Entry
+                                    </label>
+                                    <div class="small text-muted mt-1">Use business names/URLs you enter below. Good when you already have a list.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check border rounded-3 p-3 bg-white">
+                                    <input class="form-check-input" type="checkbox" name="sources[]" value="csv" id="src-csv">
+                                    <label class="form-check-label fw-semibold" for="src-csv">
+                                        <i class="bi bi-file-earmark-spreadsheet text-warning me-1"></i> CSV Import
+                                    </label>
+                                    <div class="small text-muted mt-1">Upload a CSV file with business data. Use the Import page first.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check border rounded-3 p-3 bg-white">
+                                    <input class="form-check-input" type="checkbox" name="sources[]" value="search_api" id="src-api">
+                                    <label class="form-check-label fw-semibold" for="src-api">
+                                        <i class="bi bi-globe text-info me-1"></i> Google/LinkedIn API
+                                    </label>
+                                    <div class="small text-muted mt-1">Connect via API key for real-time Google My Business or LinkedIn search results.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Target Businesses (shown when manual is selected) -->
+                    <div class="mb-4" id="manualBusinessesSection">
+                        <label class="form-label fw-semibold d-flex align-items-center gap-1">
+                            <i class="bi bi-building text-secondary"></i> Target Businesses <span class="text-muted fw-normal small">(optional — only if Manual Entry is selected above)</span>
+                        </label>
+
+                        <!-- Sample business chips -->
+                        <div class="d-flex flex-wrap gap-1 mb-2" id="sampleChips">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addBusiness('Acme Traders Pvt Ltd')">Acme Traders</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addBusiness('BrightTech Solutions')">BrightTech Solutions</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addBusiness('Global Retail Mart')">Global Retail Mart</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addBusiness('Nova Digital Services')">Nova Digital</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addBusiness('Quick Solutions Inc')">Quick Solutions</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addBusiness('https://example.com')">example.com</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addBusiness('https://demo-store.in')">demo-store.in</button>
+                        </div>
+
+                        <textarea name="businesses" class="form-control" rows="3" id="businessesTextarea"
+                                  placeholder="e.g.&#10;Acme Traders Pvt Ltd&#10;https://brightretail.in&#10;Tech Solutions&#10;https://techsolutions.com">{{ old('businesses') }}</textarea>
+                        <div class="form-text mt-1 d-flex align-items-center gap-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <span>Enter business names or website URLs — one per line. Click any example above to add it.</span>
+                        </div>
+                    </div>
+
+                    <script>
+                    function addBusiness(name) {
+                        const ta = document.getElementById('businessesTextarea');
+                        const current = ta.value.trim();
+                        ta.value = current ? current + '\n' + name : name;
+                        ta.focus();
+                    }
+                    // Toggle manual businesses section based on checkbox
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const manualCheckbox = document.getElementById('src-manual');
+                        const section = document.getElementById('manualBusinessesSection');
+                        function toggleManual() {
+                            section.style.display = manualCheckbox.checked ? 'block' : 'none';
+                        }
+                        manualCheckbox.addEventListener('change', toggleManual);
+                        toggleManual();
+                    });
+                    </script>
+
                     <hr class="my-4">
 
                     <button type="submit" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2 py-3" id="startBtn">
-                        <i class="bi bi-rocket-takeoff fs-5"></i>
-                        <span class="fw-semibold">Start Discovery</span>
+                        <i class="bi bi-rocket-takeoff fs-5" id="startIcon"></i>
+                        <span class="fw-semibold" id="startText">Start Discovery</span>
+                        <span class="spinner-border spinner-border-sm d-none" id="startSpinner"></span>
                     </button>
                     <div class="text-center small text-muted mt-3">
                         <i class="bi bi-shield-check me-1 text-success"></i>Compliant, human-reviewed sources only.
@@ -102,4 +193,17 @@
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('startBtn')?.addEventListener('click', function(e) {
+    const btn = this;
+    const icon = document.getElementById('startIcon');
+    const text = document.getElementById('startText');
+    const spinner = document.getElementById('startSpinner');
+    btn.disabled = true;
+    icon.classList.add('d-none');
+    text.textContent = 'Starting Discovery…';
+    spinner.classList.remove('d-none');
+});
+</script>
 @endsection

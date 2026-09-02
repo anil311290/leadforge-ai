@@ -14,6 +14,8 @@
         <p class="text-muted small mb-0">
             @if($lead->normalized_domain)<a href="{{ $lead->website }}" target="_blank" rel="noopener">{{ $lead->normalized_domain }}</a> · @endif
             {{ $lead->industry ?? '—' }} · {{ $lead->city ?? $lead->location ?? '' }}
+            @if($lead->email) · <i class="bi bi-envelope"></i> <a href="mailto:{{ $lead->email }}" class="text-muted text-decoration-none">{{ $lead->email }}</a>@endif
+            @if($lead->phone) · <i class="bi bi-telephone"></i> <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $lead->phone) }}" target="_blank" class="text-muted text-decoration-none" title="Open WhatsApp">{{ $lead->phone }} <i class="bi bi-whatsapp text-success"></i></a>@endif
         </p>
     </div>
     <div class="d-flex gap-2">
@@ -23,6 +25,10 @@
         @if($lead->normalized_domain && !$lead->analyses->count())
             <form method="POST" action="{{ route('leads.analyse', $lead) }}">@csrf<button class="btn btn-info btn-sm text-white"><i class="bi bi-motherboard me-1"></i>Analyse</button></form>
         @endif
+        @if($lead->email)
+            <form method="POST" action="{{ route('emails.generate', $lead) }}">@csrf<button class="btn btn-outline-primary btn-sm"><i class="bi bi-envelope-paper me-1"></i>Generate Email</button></form>
+        @endif
+        <form method="POST" action="{{ route('followups.trigger', $lead) }}">@csrf<button class="btn btn-outline-warning btn-sm"><i class="bi bi-alarm me-1"></i>Schedule Follow-up</button></form>
         <div class="dropdown">
             <button class="btn btn-light btn-sm" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
             <ul class="dropdown-menu dropdown-menu-end">
@@ -46,14 +52,52 @@
     <div class="col-6 col-md-3"><div class="card p-3 shadow-sm text-center"><div class="text-muted small">Status</div><div><span class="badge bg-light text-dark border">{{ $lead->status }}</span></div></div></div>
 </div>
 
-<div class="d-flex gap-2 mb-3">
-    <a href="#overview" class="btn btn-sm btn-light">Details</a>
-    <a href="#analysis" class="btn btn-sm btn-light">Analysis</a>
-    <a href="#website" class="btn btn-sm btn-light">Website</a>
-    <a href="#emails" class="btn btn-sm btn-light">Emails</a>
-    <a href="#followups" class="btn btn-sm btn-light">Follow-ups</a>
-    <a href="#activity" class="btn btn-sm btn-light">Activity</a>
+@if($lead->phone)
+<div class="mb-3">
+    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $lead->phone) }}" target="_blank" class="btn btn-success btn-sm">
+        <i class="bi bi-whatsapp me-1"></i> Chat on WhatsApp — {{ $lead->phone }}
+    </a>
 </div>
+@endif
+
+<div class="d-flex gap-2 mb-3 flex-wrap">
+    <a href="#overview" class="btn btn-sm btn-outline-primary active-tab" data-tab="overview"><i class="bi bi-info-circle me-1"></i>Details</a>
+    <a href="#analysis" class="btn btn-sm btn-outline-primary" data-tab="analysis"><i class="bi bi-motherboard me-1"></i>Analysis</a>
+    <a href="#website" class="btn btn-sm btn-outline-primary" data-tab="website"><i class="bi bi-globe me-1"></i>Website</a>
+    <a href="#emails" class="btn btn-sm btn-outline-primary" data-tab="emails"><i class="bi bi-envelope me-1"></i>Emails</a>
+    <a href="#followups" class="btn btn-sm btn-outline-primary" data-tab="followups"><i class="bi bi-alarm me-1"></i>Follow-ups</a>
+    <a href="#activity" class="btn btn-sm btn-outline-primary" data-tab="activity"><i class="bi bi-activity me-1"></i>Activity</a>
+</div>
+
+<style>
+.tab-btn.active-tab {
+    background: #0d6efd !important;
+    color: #fff !important;
+    border-color: #0d6efd !important;
+}
+.tab-btn {
+    transition: all .15s ease;
+}
+.tab-btn:hover {
+    background: #e9ecef;
+}
+</style>
+<script>
+document.querySelectorAll('[data-tab]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        document.querySelectorAll('[data-tab]').forEach(t => t.classList.remove('active-tab'));
+        this.classList.add('active-tab');
+    });
+});
+// Highlight active tab on page load based on hash
+const hash = window.location.hash.replace('#', '');
+if (hash) {
+    const tab = document.querySelector('[data-tab="' + hash + '"]');
+    if (tab) tab.classList.add('active-tab');
+} else {
+    document.querySelector('[data-tab="overview"]')?.classList.add('active-tab');
+}
+</script>
 <div class="row g-3">
     <div class="col-12 col-xl-7">
         {{-- Analysis --}}
@@ -185,13 +229,25 @@
                 @endif
             </div>
             <div class="card-body py-2">
+                @if($lead->email)
+                    <div class="alert alert-info py-2 small mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-envelope"></i>
+                        <span><strong>Client Email:</strong> <a href="mailto:{{ $lead->email }}" class="text-decoration-none">{{ $lead->email }}</a></span>
+                    </div>
+                @endif
                 @forelse($lead->emails as $email)
                     <div class="border-bottom py-2">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="small fw-semibold">{{ Str::limit($email->subject, 42) }}</span>
                             <span class="badge {{ $email->status==='sent'?'text-bg-success':($email->status==='pending_approval'?'text-bg-warning':'bg-light text-dark border') }}">{{ $email->status }}</span>
                         </div>
-                        <div class="small text-muted">{{ $email->created_at->diffForHumans() }} · {{ $email->direction }}</div>
+                        <div class="small text-muted d-flex flex-wrap gap-2">
+                            <span><i class="bi bi-clock me-1"></i>{{ $email->created_at->diffForHumans() }}</span>
+                            <span><i class="bi bi-arrow-right me-1"></i>{{ $email->direction }}</span>
+                            @if($email->to_email)
+                                <span><i class="bi bi-person me-1"></i>To: {{ $email->to_email }}</span>
+                            @endif
+                        </div>
                         @if(in_array($email->status, ['pending_approval','approved']))
                             <div class="mt-2">
                                 <form method="POST" action="{{ route('emails.approve', $email) }}" class="d-inline">@csrf<button class="btn btn-sm btn-success">Approve &amp; queue</button></form>

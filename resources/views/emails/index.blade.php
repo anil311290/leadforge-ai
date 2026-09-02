@@ -16,11 +16,12 @@
 <div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table align-middle mb-0">
-            <thead><tr><th>Lead</th><th>Subject</th><th>Direction</th><th>Status</th><th>Created</th><th></th></tr></thead>
+            <thead><tr><th>Lead</th><th>To</th><th>Subject</th><th>Direction</th><th>Status</th><th>Created</th><th></th></tr></thead>
             <tbody>
             @forelse($messages as $msg)
                 <tr>
                     <td>@if($msg->lead)<a href="{{ route('leads.show', $msg->lead) }}" class="fw-semibold">{{ Str::limit($msg->lead->company, 26) }}</a>@else<span class="text-muted">—</span>@endif</td>
+                    <td class="small text-muted">{{ $msg->to_email ?: '—' }}</td>
                     <td class="small">{{ Str::limit($msg->subject, 42) }}</td>
                     <td><span class="badge {{ $msg->direction==='inbound'?'text-bg-info':'bg-light text-dark border' }}">{{ $msg->direction }}</span></td>
                     <td><span class="badge {{ $msg->status==='sent'?'text-bg-success':($msg->status==='pending_approval'?'text-bg-warning':($msg->status==='approved'?'text-bg-info':'bg-light text-dark border')) }}">{{ $msg->status }}</span></td>

@@ -43,17 +43,29 @@ class DiscoveryEngine
                 if ($lead->normalized_domain) {
                     Log::info("[Campaign {$campaign->id}] Queuing website scan for {$lead->company} ({$lead->normalized_domain})");
                     dispatch(new ScanWebsite($lead));
+                } elseif ($campaign->auto_analysis_enabled) {
+                    // No website to scan, but still analyse based on lead data
+                    Log::info("[Campaign {$campaign->id}] No website for {$lead->company} — queuing direct analysis");
+                    dispatch(new AnalyseLead($lead));
                 }
             }
 
             $this->setProgress($campaign, 80, 'Website scans queued. Analysing opportunities…');
 
-            $campaign->update([
-                'status' => 'completed',
-                'progress' => 100,
-                'progress_message' => 'Campaign completed — '.count($leadsCreated).' leads discovered.',
-                'completed_at' => now(),
-            ]);
+            // When queue is sync, scans run inline — mark complete now.
+            // When queue is async, ScanWebsite & AnalyseLead jobs update progress.
+            if (config('queue.default') === 'sync') {
+                $campaign->update([
+                    'status' => 'completed',
+                    'progress' => 100,
+                    'progress_message' => 'Campaign completed — '.count($leadsCreated).' leads discovered.',
+                    'completed_at' => now(),
+                ]);
+            } else {
+                $campaign->update([
+                    'progress_message' => 'Scanning & analysing '.count($leadsCreated).' leads in the background…',
+                ]);
+            }
 
             Log::info("[Campaign {$campaign->id}] Campaign completed");
             $this->activities->log(
@@ -84,9 +96,17 @@ class DiscoveryEngine
      */
     protected function discover(Campaign $campaign): array
     {
-        $providers = $this->manager->getProviders();
-        if (empty($providers)) {
+        $allProviders = $this->manager->getProviders();
+        if (empty($allProviders)) {
             throw new \RuntimeException('No discovery providers configured.');
+        }
+
+        // Use campaign-specific sources if set, otherwise use all configured providers
+        $campaignSources = $campaign->parameters['sources'] ?? [];
+        if (! empty($campaignSources)) {
+            $providers = array_filter($allProviders, fn ($p) => in_array($p->name(), $campaignSources));
+        } else {
+            $providers = $allProviders;
         }
 
         $leadsCreated = [];

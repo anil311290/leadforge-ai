@@ -14,6 +14,10 @@
             <div class="fw-semibold">@if($msg->lead){{ $msg->lead->company }}@endif · <span class="text-muted">{{ $msg->subject }}</span></div>
             <span class="badge {{ $msg->status==='approved'?'text-bg-info':'text-bg-warning' }}">{{ $msg->status }}</span>
         </div>
+        <div class="small text-muted mb-2">
+            <i class="bi bi-envelope me-1"></i><strong>To:</strong> {{ $msg->to_email ?: '—' }}
+            @if($msg->from_email) · <strong>From:</strong> {{ $msg->from_email }}@endif
+        </div>
         <div class="bg-light rounded p-3 small white-space:pre-wrap;">{{ $msg->body }}</div>
         <div class="mt-3 d-flex gap-2">
             <form method="POST" action="{{ route('emails.approve', $msg) }}">@csrf<button class="btn btn-sm btn-success"><i class="bi bi-check-lg me-1"></i>Approve</button></form>

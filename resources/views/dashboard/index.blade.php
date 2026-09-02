@@ -12,7 +12,7 @@
 
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-4 col-xl-3">
-        <div class="card p-3 shadow-sm">
+        <a href="{{ route('leads.index') }}" class="card p-3 shadow-sm d-block text-decoration-none text-dark">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-people"></i></div>
                 <div>
@@ -20,10 +20,10 @@
                     <div class="text-muted small">Total Leads</div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-6 col-md-3 col-xl-3">
-        <div class="card p-3 shadow-sm">
+        <a href="{{ route('leads.index', ['score_class' => 'HOT']) }}" class="card p-3 shadow-sm d-block text-decoration-none text-dark">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-fire"></i></div>
                 <div>
@@ -31,10 +31,10 @@
                     <div class="text-muted small">Hot Leads</div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-6 col-md-3 col-xl-3">
-        <div class="card p-3 shadow-sm">
+        <a href="{{ route('leads.index', ['score_class' => 'HIGH']) }}" class="card p-3 shadow-sm d-block text-decoration-none text-dark">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-lightning-charge"></i></div>
                 <div>
@@ -42,10 +42,10 @@
                     <div class="text-muted small">High Potential</div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-6 col-md-3 col-xl-3">
-        <div class="card p-3 shadow-sm">
+        <a href="{{ route('emails.index') }}" class="card p-3 shadow-sm d-block text-decoration-none text-dark">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-envelope-check"></i></div>
                 <div>
@@ -53,10 +53,10 @@
                     <div class="text-muted small">Email Replies</div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-6 col-md-3 col-xl-3">
-        <div class="card p-3 shadow-sm">
+        <a href="{{ route('followups.index') }}" class="card p-3 shadow-sm d-block text-decoration-none text-dark">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-hourglass-split"></i></div>
                 <div>
@@ -64,10 +64,10 @@
                     <div class="text-muted small">Follow-ups Today</div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-6 col-md-3 col-xl-3">
-        <div class="card p-3 shadow-sm">
+        <a href="{{ route('pipeline.index') }}" class="card p-3 shadow-sm d-block text-decoration-none text-dark">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-calendar-check"></i></div>
                 <div>
@@ -75,10 +75,10 @@
                     <div class="text-muted small">Meetings</div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-6 col-md-3 col-xl-3">
-        <div class="card p-3 shadow-sm">
+        <a href="{{ route('leads.index', ['status' => 'WON']) }}" class="card p-3 shadow-sm d-block text-decoration-none text-dark">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-trophy"></i></div>
                 <div>
@@ -86,10 +86,10 @@
                     <div class="text-muted small">Won Projects</div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-6 col-md-3 col-xl-3">
-        <div class="card p-3 shadow-sm">
+        <a href="{{ route('leads.index', ['status' => 'LOST']) }}" class="card p-3 shadow-sm d-block text-decoration-none text-dark">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-x-circle"></i></div>
                 <div>
@@ -97,7 +97,7 @@
                     <div class="text-muted small">Lost Projects</div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 

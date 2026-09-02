@@ -27,10 +27,23 @@ class AnalyseLead implements ShouldQueue
             $total = max($campaign->leads()->count(), 1);
             $analysed = $campaign->leads()->whereNotNull('analyzed_at')->count();
 
+            $progress = min(85 + (int) round(($analysed / $total) * 14), 99);
+            $message = "Analysing opportunities: {$analysed}/{$total} leads scored";
+
             \App\Models\Campaign::where('id', $campaign->id)->update([
-                'progress' => min(85 + (int) round(($analysed / $total) * 14), 99),
-                'progress_message' => "Analysing opportunities: {$analysed}/{$total} leads scored",
+                'progress' => $progress,
+                'progress_message' => $message,
             ]);
+
+            // Mark campaign complete when all leads analysed
+            if ($analysed >= $total) {
+                \App\Models\Campaign::where('id', $campaign->id)->update([
+                    'status' => 'completed',
+                    'progress' => 100,
+                    'progress_message' => 'Campaign completed — all leads analysed.',
+                    'completed_at' => now(),
+                ]);
+            }
         }
     }
 }

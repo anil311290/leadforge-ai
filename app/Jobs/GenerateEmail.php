@@ -29,7 +29,7 @@ class GenerateEmail implements ShouldQueue
             'subject' => $draft['subject'] ?? 'Service opportunity for '.$this->lead->company,
             'body' => $draft['body'] ?? '',
             'to_email' => $this->lead->email,
-            'from_email' => config('leadforge.email.from_email'),
+            'from_email' => config('mail.from.address', config('leadforge.email.from_email')),
             'status' => config('leadforge.email.require_approval', true) ? 'pending_approval' : 'approved',
         ]);
     }

@@ -29,11 +29,8 @@ class ScanWebsite implements ShouldQueue
 
     public static function shouldQueue(): bool
     {
-        if (self::$shouldQueueCheck === null) {
-            self::$shouldQueueCheck = config('queue.default') !== 'sync' && (bool) app(WebScanClient::class)->isConfigured();
-        }
-
-        return self::$shouldQueueCheck;
+        // Always queue — the handle() method handles missing worker gracefully
+        return true;
     }
 
     public function handle(WebScanClient $client, ActivityService $activities): void
@@ -67,8 +64,13 @@ class ScanWebsite implements ShouldQueue
 
         try {
             if (! $client->isAvailable()) {
+                Log::info("[Scan] Crawl worker not available for {$this->lead->company} — marking as analysed without scan");
                 $scan->update(['status' => 'failed', 'error' => 'Crawl worker is not available.', 'scanned_at' => now()]);
-                $this->lead->update(['status' => Lead::STATUS_ANALYZED, 'analysis' => null]);
+                $this->lead->update(['status' => Lead::STATUS_ANALYZED]);
+
+                if ($this->lead->campaign?->auto_analysis_enabled) {
+                    dispatch(new AnalyseLead($this->lead));
+                }
 
                 return;
             }
@@ -147,7 +149,12 @@ class ScanWebsite implements ShouldQueue
         } catch (\Throwable $e) {
             Log::error('Website scan failed', ['lead' => $this->lead->id, 'error' => $e->getMessage()]);
             $scan->update(['status' => 'failed', 'error' => $e->getMessage(), 'scanned_at' => now()]);
-            $this->lead->update(['status' => Lead::STATUS_ANALYZED, 'analysis' => ['error' => $e->getMessage()]]);
+            $this->lead->update(['status' => Lead::STATUS_ANALYZED]);
+
+            // Still try analysis even if scan failed
+            if ($this->lead->campaign?->auto_analysis_enabled) {
+                dispatch(new AnalyseLead($this->lead));
+            }
         }
     }
 
