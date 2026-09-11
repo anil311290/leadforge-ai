@@ -12,10 +12,21 @@ use Illuminate\Support\Facades\Auth;
 
 class FreelancerBidController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
+        $filterAccounts = FreelancerAccount::orderBy('name')->get(['id', 'name']);
+        $selectedAccountId = $request->filled('account_id') ? $request->integer('account_id') : null;
         $accounts = FreelancerAccount::withCount('bids')->orderBy('name')->get();
+        if ($selectedAccountId && $filterAccounts->contains('id', $selectedAccountId)) {
+            $accounts = $accounts->where('id', $selectedAccountId)->values();
+        } else {
+            $selectedAccountId = null;
+        }
+
         $bids = FreelancerBid::query();
+        if ($selectedAccountId) {
+            $bids->where('freelancer_account_id', $selectedAccountId);
+        }
         $totalBids = (clone $bids)->count();
 
         $statusCounts = (clone $bids)
@@ -57,11 +68,11 @@ class FreelancerBidController extends Controller
             'bid_value' => $bidValue,
         ];
 
-        $recentBids = FreelancerBid::with('account')->latest()->limit(8)->get();
+        $recentBids = (clone $bids)->with('account')->latest()->limit(8)->get();
         $statusChart = collect(['pending', 'submitted', 'awarded', 'failed', 'skipped', 'rejected'])
             ->mapWithKeys(fn (string $status) => [$status => (int) ($statusCounts[$status] ?? 0)]);
 
-        return view('freelancer.dashboard', compact('accounts', 'activity', 'recentBids', 'stats', 'statusChart'));
+        return view('freelancer.dashboard', compact('accounts', 'activity', 'recentBids', 'stats', 'statusChart', 'filterAccounts', 'selectedAccountId'));
     }
 
     public function index(Request $request)
