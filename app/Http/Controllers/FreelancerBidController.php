@@ -77,17 +77,8 @@ class FreelancerBidController extends Controller
 
     public function index(Request $request)
     {
-        $query = FreelancerBid::with('account')->latest();
-
-        if ($request->filled('account_id')) {
-            $query->where('freelancer_account_id', $request->integer('account_id'));
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
-        }
-
-        $bids = $query->paginate(20)->withQueryString();
+        $perPage = $this->perPage($request);
+        $bids = $this->filteredBids($request)->paginate($perPage)->withQueryString();
         $accounts = FreelancerAccount::orderBy('name')->get(['id', 'name']);
 
         $stats = [
@@ -98,6 +89,60 @@ class FreelancerBidController extends Controller
         ];
 
         return view('freelancer.bids.index', compact('bids', 'accounts', 'stats'));
+    }
+
+    public function export(Request $request)
+    {
+        $bids = $this->filteredBids($request)->get();
+        $filename = 'freelancer-bids-'.now()->format('Y-m-d-His').'.csv';
+
+        return response()->streamDownload(function () use ($bids) {
+            $output = fopen('php://output', 'w');
+            fputcsv($output, ['Project', 'Account', 'Client budget', 'Client bid', 'Client timeline', 'Internal costing', 'Internal timeline', 'Status', 'Country', 'Created']);
+
+            foreach ($bids as $bid) {
+                fputcsv($output, [
+                    $bid->project_title ?? 'Project #'.$bid->project_id,
+                    $bid->account->name ?? '',
+                    trim(($bid->currency_sign ?? '').number_format($bid->budget_min ?? 0).' - '.($bid->currency_sign ?? '').number_format($bid->budget_max ?? 0).' '.($bid->currency_code ?? '')),
+                    $bid->bid_amount ? ($bid->currency_sign ?? '').number_format($bid->bid_amount, 2) : '',
+                    $bid->bid_period_days ? $bid->bid_period_days.' days' : '',
+                    $bid->internal_cost ? ($bid->currency_sign ?? '').number_format($bid->internal_cost, 2) : '',
+                    $bid->internal_timeline_days ? $bid->internal_timeline_days.' days' : '',
+                    ucfirst((string) $bid->status),
+                    $bid->client_country ?? '',
+                    optional($bid->created_at)->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($output);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    protected function filteredBids(Request $request)
+    {
+        $sorts = [
+            'project' => 'project_title',
+            'account' => 'freelancer_account_id',
+            'budget' => 'budget_max',
+            'bid' => 'bid_amount',
+            'status' => 'status',
+            'created' => 'created_at',
+        ];
+        $sort = $sorts[$request->string('sort')->toString()] ?? 'created_at';
+        $direction = strtolower($request->string('direction')->toString()) === 'asc' ? 'asc' : 'desc';
+
+        return FreelancerBid::with('account')
+            ->when($request->filled('account_id'), fn ($query) => $query->where('freelancer_account_id', $request->integer('account_id')))
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
+            ->orderBy($sort, $direction);
+    }
+
+    protected function perPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', 20);
+
+        return in_array($perPage, [10, 20, 50, 100], true) ? $perPage : 20;
     }
 
     public function approve(FreelancerBid $bid, BidPlacementService $bidPlacementService)

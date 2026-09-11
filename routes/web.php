@@ -113,6 +113,7 @@ Route::middleware('auth')->group(function () {
     // Freelancer.com auto-bidding
     Route::get('freelancer/dashboard', [FreelancerBidController::class, 'dashboard'])->name('freelancer.dashboard');
     Route::get('freelancer/bids', [FreelancerBidController::class, 'index'])->name('freelancer.bids.index');
+    Route::get('freelancer/bids/export', [FreelancerBidController::class, 'export'])->name('freelancer.bids.export');
     Route::post('freelancer/bids/{bid}/approve', [FreelancerBidController::class, 'approve'])->name('freelancer.bids.approve');
     Route::post('freelancer/bids/{bid}/reject', [FreelancerBidController::class, 'reject'])->name('freelancer.bids.reject');
     Route::get('freelancer/accounts', [FreelancerAccountController::class, 'index'])->name('freelancer.accounts.index')->middleware('role:admin');

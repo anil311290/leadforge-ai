@@ -16,6 +16,7 @@ class BidPlacementService
     public function __construct(
         protected BidEligibilityService $eligibility,
         protected ProposalGenerator $proposals,
+        protected BidQuoteCalculator $quotes,
     ) {
     }
 
@@ -97,9 +98,9 @@ class BidPlacementService
 
             $summary['eligible']++;
 
-            // Never bid below the project's own minimum, regardless of the account's default amount.
-            $bidAmount = max($account->bid_amount_default > 0 ? (float) $account->bid_amount_default : 10, $budgetMin);
-            $bidPeriod = $account->bid_period_days_default ?: 5;
+            $quote = $this->quotes->calculate($project, (float) $budgetMin, (float) $budgetMax, $account, (string) $currencyCode);
+            $bidAmount = $quote['amount'];
+            $bidPeriod = $quote['period_days'];
             $proposal = $this->proposals->generate($project, $account);
 
             $bid = FreelancerBid::create([
@@ -114,6 +115,8 @@ class BidPlacementService
                 'client_country' => $country,
                 'bid_amount' => $bidAmount,
                 'bid_period_days' => $bidPeriod,
+                'internal_cost' => $quote['internal_cost'],
+                'internal_timeline_days' => $quote['internal_timeline_days'],
                 'proposal_text' => $proposal,
                 'status' => 'pending',
             ]);
