@@ -7,6 +7,7 @@ use App\Models\Lead;
 use App\Services\AuditService;
 use App\Services\Discovery\DiscoveryEngine;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CampaignController extends Controller
 {
@@ -20,7 +21,8 @@ class CampaignController extends Controller
         $campaigns = Campaign::withCount(['leads as leads_count'])
             ->with('user')
             ->orderByDesc('created_at')
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
 
         return view('campaigns.index', compact('campaigns'));
     }
@@ -142,7 +144,7 @@ class CampaignController extends Controller
             'pipeline' => (float) $campaign->leads()->sum('estimated_max'),
         ];
 
-        $leads = $campaign->leads()->orderByDesc('opportunity_score')->paginate(12);
+        $leads = $campaign->leads()->orderByDesc('opportunity_score')->paginate(12)->withQueryString();
 
         return view('campaigns.show', compact('campaign', 'stats', 'leads'));
     }
@@ -155,6 +157,63 @@ class CampaignController extends Controller
     public function edit()
     {
         # handled via show; included for completeness
+    }
+
+    public function destroyLeads(Campaign $campaign)
+    {
+        $this->authorize('update', $campaign);
+
+        $deleted = $this->clearCampaignLeads($campaign);
+
+        $campaign->update([
+            'status' => 'completed',
+            'progress' => 0,
+            'progress_message' => 'Existing leads deleted. You can regenerate this campaign anytime.',
+            'error' => null,
+            'completed_at' => now(),
+        ]);
+
+        AuditService::record(auth()->user(), 'campaign_leads_deleted', 'Campaign', $campaign->id, null, ['deleted' => $deleted]);
+
+        return back()->with('success', "Deleted {$deleted} existing leads from this campaign.");
+    }
+
+    public function regenerate(Campaign $campaign)
+    {
+        $this->authorize('update', $campaign);
+
+        $deleted = $this->clearCampaignLeads($campaign);
+
+        $campaign->update([
+            'status' => 'running',
+            'progress' => 0,
+            'progress_message' => 'Regenerating leads…',
+            'error' => null,
+            'started_at' => now(),
+            'completed_at' => null,
+        ]);
+
+        AuditService::record(auth()->user(), 'campaign_regenerated', 'Campaign', $campaign->id, null, ['deleted' => $deleted]);
+
+        if (config('queue.default') !== 'sync') {
+            DiscoveryEngine::start($campaign);
+        } else {
+            $this->engine->runForCampaign($campaign);
+        }
+
+        return redirect()->route('campaigns.show', $campaign)->with('success', "Regenerating leads. Removed {$deleted} old leads first.");
+    }
+
+    protected function clearCampaignLeads(Campaign $campaign): int
+    {
+        return DB::transaction(function () use ($campaign) {
+            $deleted = $campaign->leads()->count();
+
+            $campaign->leads()->delete();
+            $campaign->sources()->delete();
+
+            return $deleted;
+        });
     }
 
     public function pause(Campaign $campaign)

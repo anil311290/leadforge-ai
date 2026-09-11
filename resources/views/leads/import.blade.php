@@ -2,11 +2,9 @@
 @section('title', 'Import Leads')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-12 col-lg-8">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h4 class="fw-bold mb-1">Import Leads</h4>
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <h4 class="fw-bold mb-1">Import Leads</h4>
                 <p class="text-muted small">Paste business names/URLs or upload a CSV with <code>name, website, email, phone, industry, location</code> columns. We automatically de-duplicate against existing leads.</p>
                 <hr>
                 <form method="POST" action="{{ route('leads.import.submit') }}" enctype="multipart/form-data">
@@ -25,6 +23,4 @@
                 </form>
             </div>
         </div>
-    </div>
-</div>
 @endsection

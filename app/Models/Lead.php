@@ -193,4 +193,83 @@ class Lead extends Model
             default => 'IGNORE',
         };
     }
+
+    public function whatsappOutreachMessage(): string
+    {
+        $industry = $this->industry ?: 'local business';
+        $area = $this->city ?: $this->location ?: 'your area';
+        $service = $this->recommended_service ?: $this->defaultOutreachService();
+        $opening = $this->website
+            ? "I came across {$this->company} online and noticed your work in the {$industry} space around {$area}."
+            : "I found {$this->company} on Google for {$area} and noticed a website is not listed yet.";
+
+        return implode("\n\n", [
+            "Hi {$this->company},",
+            $opening,
+            $this->industryOutreachAngle(),
+            "At APARK IT SOLUTIONS, we can help you with {$service} so customers can find you online, understand your services, and contact you easily.",
+            'Would you be open to a quick 10-minute discussion?',
+            "Best regards,\nAPARK IT SOLUTIONS",
+        ]);
+    }
+
+    public function quotationMessage(?string $prompt = null): string
+    {
+        $service = $this->recommended_service ?: $this->defaultOutreachService();
+        $industry = $this->industry ?: 'business';
+        $area = $this->city ?: $this->location ?: 'your area';
+        $min = $this->estimated_min ? '₹'.number_format((float) $this->estimated_min) : '₹25,000';
+        $max = $this->estimated_max ? '₹'.number_format((float) $this->estimated_max) : '₹75,000';
+        $customRequirement = trim((string) $prompt);
+
+        $scope = "Scope includes:\n- Requirement discussion and planning\n- Professional UI/design setup\n- Website/software/app development as per selected scope\n- Contact/enquiry or WhatsApp integration\n- Basic testing and deployment support";
+        if ($customRequirement !== '') {
+            $scope .= "\n- Custom requirement: {$customRequirement}";
+        }
+
+        return implode("\n\n", [
+            "Hi {$this->company},",
+            "As discussed/reviewed, we are sharing an initial quotation from APARK IT SOLUTIONS for {$service} for your {$industry} business in {$area}.",
+            $scope,
+            "Estimated budget: {$min} - {$max}\nTimeline: 2-6 weeks, depending on final scope and content readiness.",
+            'This is an initial estimate. Final quotation can be adjusted after understanding your exact requirements.',
+            'Would you like us to schedule a quick call and finalize the scope?',
+            "Best regards,\nAPARK IT SOLUTIONS",
+        ]);
+    }
+
+    protected function defaultOutreachService(): string
+    {
+        $industry = strtolower((string) $this->industry);
+
+        return match (true) {
+            str_contains($industry, 'restaurant'), str_contains($industry, 'cafe'), str_contains($industry, 'hospitality') => 'a menu website, WhatsApp ordering flow, and customer enquiry system',
+            str_contains($industry, 'clinic'), str_contains($industry, 'health') => 'a clinic website, appointment enquiry form, and patient follow-up system',
+            str_contains($industry, 'real estate') => 'a property listing website, lead capture forms, and enquiry management system',
+            str_contains($industry, 'education'), str_contains($industry, 'school'), str_contains($industry, 'training') => 'an admission enquiry website, course pages, and follow-up automation',
+            str_contains($industry, 'fitness'), str_contains($industry, 'gym') => 'a fitness website, membership enquiry flow, and WhatsApp follow-up system',
+            str_contains($industry, 'manufacturing') => 'a business website, product catalogue, and B2B enquiry system',
+            str_contains($industry, 'travel') => 'a travel package website, booking enquiry flow, and lead follow-up system',
+            str_contains($industry, 'salon'), str_contains($industry, 'beauty') => 'a salon website, appointment booking flow, and offer promotion system',
+            default => 'a professional website, enquiry form, WhatsApp integration, and simple customer follow-up system',
+        };
+    }
+
+    protected function industryOutreachAngle(): string
+    {
+        $industry = strtolower((string) $this->industry);
+
+        return match (true) {
+            str_contains($industry, 'retail') => 'For retail shops, a simple online catalogue with location, offers, photos, and WhatsApp enquiry can help customers check products before visiting.',
+            str_contains($industry, 'restaurant'), str_contains($industry, 'cafe'), str_contains($industry, 'hospitality') => 'For food businesses, customers often search for menu, photos, timings, location, and ordering options before deciding where to visit or call.',
+            str_contains($industry, 'clinic'), str_contains($industry, 'health') => 'For clinics, a clear website with doctor/service details, timings, appointment enquiry, and Google profile support can make patient enquiries easier.',
+            str_contains($industry, 'real estate') => 'For real estate businesses, property pages, enquiry forms, WhatsApp buttons, and lead tracking can make follow-ups much easier.',
+            str_contains($industry, 'education'), str_contains($industry, 'school'), str_contains($industry, 'training') => 'For education businesses, course/admission pages and enquiry follow-ups can help convert parents or students who search online.',
+            str_contains($industry, 'fitness'), str_contains($industry, 'gym') => 'For gyms and fitness centres, a website with plans, photos, trial enquiry, and WhatsApp follow-up can help bring more local enquiries.',
+            str_contains($industry, 'manufacturing') => 'For manufacturing businesses, a product catalogue website and enquiry system can help buyers understand capability before calling.',
+            str_contains($industry, 'travel') => 'For travel businesses, package pages, enquiry forms, and WhatsApp follow-ups can help manage interested customers faster.',
+            str_contains($industry, 'salon'), str_contains($industry, 'beauty') => 'For salons and beauty businesses, service pages, offers, gallery, and booking enquiries can help customers choose and contact quickly.',
+            default => 'Many customers check Google first, so a clean website with services, location, photos, enquiry form, and WhatsApp contact can improve trust and follow-ups.',
+        };
+    }
 }

@@ -6,6 +6,7 @@ use App\Models\Lead;
 use App\Policies\CampaignPolicy;
 use App\Policies\LeadPolicy;
 use App\Services\Discovery\DiscoveryManager;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
         DiscoveryManager::boot();
         Gate::policy(Lead::class, LeadPolicy::class);
         Gate::policy(Campaign::class, CampaignPolicy::class);

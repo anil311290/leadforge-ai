@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\AnalyseLead;
+use App\Models\Campaign;
 use App\Models\Lead;
 use App\Services\ActivityService;
 use App\Services\AuditService;
@@ -38,7 +39,51 @@ class LeadController extends Controller
             $query->where('score_class', $request->input('score_class'));
         }
 
-        $leads = $query->orderByRaw('coalesce(opportunity_score,0) DESC')->paginate(25)->withQueryString();
+        if ($request->filled('campaign_id')) {
+            $query->where('campaign_id', $request->input('campaign_id'));
+        }
+
+        if ($request->filled('source')) {
+            $query->where('source', $request->input('source'));
+        }
+
+        if ($request->filled('industry')) {
+            $industry = $request->input('industry');
+            $query->where('industry', 'like', "%{$industry}%");
+        }
+
+        if ($request->filled('city')) {
+            $city = $request->input('city');
+            $query->where(fn ($w) => $w->where('city', 'like', "%{$city}%")
+                ->orWhere('location', 'like', "%{$city}%"));
+        }
+
+        if ($request->filled('min_score')) {
+            $query->where('opportunity_score', '>=', (float) $request->input('min_score'));
+        }
+
+        match ($request->input('contact')) {
+            'has_email' => $query->whereNotNull('email'),
+            'no_email' => $query->whereNull('email'),
+            'has_phone' => $query->whereNotNull('phone'),
+            'no_phone' => $query->whereNull('phone'),
+            'has_any' => $query->where(fn ($w) => $w->whereNotNull('email')->orWhereNotNull('phone')),
+            'missing_all' => $query->whereNull('email')->whereNull('phone'),
+            default => null,
+        };
+
+        match ($request->input('website')) {
+            'has_website' => $query->whereNotNull('website'),
+            'no_website' => $query->whereNull('website'),
+            default => null,
+        };
+
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
+        $leads = $query->orderByRaw('coalesce(opportunity_score,0) DESC')->paginate($perPage)->withQueryString();
 
         $counts = [
             'all' => (int) Lead::count(),
@@ -47,7 +92,10 @@ class LeadController extends Controller
             'hot' => Lead::where('score_class', 'HOT')->count(),
         ];
 
-        return view('leads.index', compact('leads', 'counts'));
+        $campaigns = Campaign::orderByDesc('created_at')->limit(50)->get(['id', 'name']);
+        $sources = Lead::whereNotNull('source')->distinct()->orderBy('source')->pluck('source');
+
+        return view('leads.index', compact('leads', 'counts', 'campaigns', 'sources'));
     }
 
     public function create()
@@ -101,6 +149,52 @@ class LeadController extends Controller
         $lead->load(['scans.pages', 'analyses', 'recommendations', 'opportunities.service', 'emails', 'followUps', 'activities.lead', 'contacts']);
 
         return view('leads.show', compact('lead'));
+    }
+
+    public function edit(Lead $lead)
+    {
+        $this->authorize('update', $lead);
+
+        return view('leads.edit', compact('lead'));
+    }
+
+    public function update(Request $request, Lead $lead)
+    {
+        $this->authorize('update', $lead);
+
+        $data = $this->validate($request, [
+            'company' => ['required', 'string', 'max:255'],
+            'website' => ['nullable', 'string', 'max:255'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'industry' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:64'],
+            'email' => ['nullable', 'email'],
+            'recommended_service' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        if ($this->hasDuplicateForUpdate($lead, $data)) {
+            return back()->withInput()->with('error', 'Duplicate detected — another lead already has the same company, website, phone, or email.');
+        }
+
+        $lead->update([
+            'company' => $data['company'],
+            'normalized_company' => DataNormalizer::normalizeCompany($data['company']),
+            'website' => $data['website'] ?? null,
+            'normalized_domain' => DataNormalizer::normalizeDomain($data['website'] ?? null),
+            'location' => $data['location'] ?? $data['city'] ?? null,
+            'city' => $data['city'] ?? null,
+            'industry' => $data['industry'] ?? null,
+            'phone' => $data['phone'] ?? null,
+            'email' => $data['email'] ?? null,
+            'recommended_service' => $data['recommended_service'] ?? null,
+            'notes' => $data['notes'] ?? null,
+        ]);
+
+        AuditService::record(auth()->user(), 'lead_updated', 'Lead', $lead->id, null, ['company' => $lead->company]);
+
+        return redirect()->route('leads.show', $lead)->with('success', 'Lead updated: '.$lead->company);
     }
 
     public function importView()
@@ -173,10 +267,15 @@ class LeadController extends Controller
             'next_action' => ['nullable', 'string'],
         ]);
 
-        $lead->update($data);
+        $lead->forceFill([
+            'status' => $data['status'],
+            'rejection_reason' => $data['rejection_reason'] ?? null,
+            'next_action' => $data['next_action'] ?? null,
+        ])->save();
+
         AuditService::record(auth()->user(), 'lead_status_changed', 'Lead', $lead->id, null, ['status' => $data['status']]);
 
-        return back()->with('success', 'Lead status updated to '.$data['status']);
+        return redirect()->route('leads.show', $lead)->with('success', 'Lead status updated to '.$data['status']);
     }
 
     public function addNote(Request $request, Lead $lead)
@@ -211,6 +310,31 @@ class LeadController extends Controller
         $lead->delete();
 
         return redirect()->route('leads.index')->with('success', 'Lead deleted.');
+    }
+
+    protected function hasDuplicateForUpdate(Lead $lead, array $data): bool
+    {
+        $domain = DataNormalizer::normalizeDomain($data['website'] ?? null);
+        $company = DataNormalizer::normalizeCompany($data['company'] ?? null);
+        $phone = DataNormalizer::normalizePhone($data['phone'] ?? null);
+        $email = isset($data['email']) ? strtolower(trim((string) $data['email'])) : null;
+
+        return Lead::whereKeyNot($lead->id)
+            ->where(function ($query) use ($domain, $company, $phone, $email) {
+                if ($domain) {
+                    $query->orWhere('normalized_domain', $domain);
+                }
+                if ($company) {
+                    $query->orWhere('normalized_company', $company);
+                }
+                if ($phone) {
+                    $query->orWhere('phone', $phone);
+                }
+                if ($email) {
+                    $query->orWhere('email', $email);
+                }
+            })
+            ->exists();
     }
 
     protected function parseCsv(string $path): array

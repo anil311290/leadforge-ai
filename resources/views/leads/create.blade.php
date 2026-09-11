@@ -2,11 +2,9 @@
 @section('title', 'New Lead')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-12 col-lg-8">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h4 class="fw-bold mb-1">Add a Lead</h4>
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <h4 class="fw-bold mb-1">Add a Lead</h4>
                 <p class="text-muted small">Add a business manually. Providing a website enables scanning &amp; analysis.</p>
                 <hr>
                 <form method="POST" action="{{ route('leads.store') }}">
@@ -47,6 +45,4 @@
                 </form>
             </div>
         </div>
-    </div>
-</div>
 @endsection

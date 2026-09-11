@@ -17,11 +17,11 @@ return [
             'csv' => 'App\\Services\\Discovery\\Providers\\CsvDiscoveryProvider',
             'ai_web_search' => 'App\\Services\\Discovery\\Providers\\AiWebSearchProvider',
         ],
-        'enabled_providers' => ['manual_urls', 'csv', 'ai_web_search'],
+        'enabled_providers' => ['manual_urls', 'csv', 'ai_web_search', 'search_api'],
         'search_api' => [
-            'endpoint' => env('LF_DISCOVERY_ENDPOINT'),
-            'api_key' => env('LF_DISCOVERY_API_KEY'),
-            'default_query' => env('LF_DISCOVERY_QUERY', 'software companies'),
+            'endpoint' => env('LF_DISCOVERY_ENDPOINT', 'https://places.googleapis.com/v1/places:searchText'),
+            'api_key' => env('LF_DISCOVERY_API_KEY', env('GOOGLE_MAPS_API_KEY')),
+            'default_query' => env('LF_DISCOVERY_QUERY', 'shops and local businesses without websites that may need software, website, e-commerce, CRM, ERP, SaaS or mobile app solutions'),
         ],
     ],
 

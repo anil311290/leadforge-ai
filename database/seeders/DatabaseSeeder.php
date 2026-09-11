@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->seedServices();
         $this->seedPromptTemplates();
         $this->seedSettings();
+        $this->call(FreelancerAccountSeeder::class);
     }
 
     protected function seedUsers(): void

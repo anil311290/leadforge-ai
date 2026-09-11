@@ -2,11 +2,9 @@
 @section('title', 'Add Service')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-12 col-lg-8">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h4 class="fw-bold mb-1">Add a Service</h4>
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <h4 class="fw-bold mb-1">Add a Service</h4>
                 <p class="text-muted small">Define the service, its typical project value, and (optionally) detection rules.</p>
                 <hr>
                 <form method="POST" action="{{ route('services.store') }}">
@@ -27,6 +25,4 @@
                 </form>
             </div>
         </div>
-    </div>
-</div>
 @endsection

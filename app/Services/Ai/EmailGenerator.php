@@ -61,13 +61,14 @@ Write a short, natural, personalised outreach email to {$company}.
 - Sound like a real human, NOT a robot or AI
 - NEVER mention "lead data", "analysis", "opportunity score", or "basic analysis"
 - Reference something specific about their business/industry
-- Keep it short — 3-4 sentences max
-- Offer value, don't just pitch
-- End with a soft call to action (e.g. "worth a quick chat?")
-- Sign with: {$fromName}
+- Keep it short and professional
+- Use a clean email structure: greeting, 2 short paragraphs, one clear call to action, closing
+- End with a soft call to action (e.g. "Would you be open to a quick chat?")
+- Close with: "Best regards," on one line and then "{$fromName}" on the next line
+- The body should be plain text, ready to send
+- No markdown, bullets, or placeholders like [Your Name]
 
 Return JSON with keys: subject, body
-The body should be plain text, ready to send. No placeholders like [Your Name].
 PROMPT;
 
         $raw = $this->ai->complete(
@@ -107,13 +108,13 @@ PROMPT;
         $body = <<<BODY
 Hi there,
 
-{$observation} — impressive what you're doing!
+I recently came across {$lead->company} and was genuinely impressed by what you're building in the {$industry} space. {$observation} — it's clear you're focused on creating a strong experience for your customers and community.
 
-We help {$industry} companies streamline operations with {$service}. Thought I'd reach out to see if you're exploring ways to improve your current setup.
+We help {$industry} businesses improve their online experience and streamline sales with {$service}. I believe there may be opportunities to make your website more engaging and easier for customers to buy from.
 
-Worth a quick 10-minute chat sometime?
+Would you be open to a quick chat about how we can help elevate your platform and support your business even more?
 
-Best,
+Best regards,
 {$fromName}
 BODY;
 

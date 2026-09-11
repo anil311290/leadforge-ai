@@ -9,6 +9,15 @@
         <p class="text-muted small mb-0"><i class="bi bi-geo-alt me-1"></i>{{ $campaign->location }} @if($campaign->radius_km)· {{ $campaign->radius_km }} km @endif</p>
     </div>
     <div class="d-flex gap-2">
+        <form method="POST" action="{{ route('campaigns.regenerate', $campaign) }}" id="regenerateLeadsForm">
+            @csrf
+            <button type="button" class="btn btn-primary btn-sm" data-confirm-target="regenerateLeadsForm" data-confirm-title="Regenerate leads?" data-confirm-message="This will delete existing leads from this campaign and generate fresh leads using the same campaign settings." data-confirm-button="Regenerate Leads" data-confirm-style="btn-primary"><i class="bi bi-arrow-clockwise me-1"></i>Regenerate Leads</button>
+        </form>
+        <form method="POST" action="{{ route('campaigns.leads.destroy', $campaign) }}" id="deleteExistingLeadsForm">
+            @csrf
+            @method('DELETE')
+            <button type="button" class="btn btn-outline-danger btn-sm" data-confirm-target="deleteExistingLeadsForm" data-confirm-title="Delete existing leads?" data-confirm-message="This will remove all existing leads from this campaign. The campaign itself will remain available." data-confirm-button="Delete Leads" data-confirm-style="btn-danger"><i class="bi bi-trash me-1"></i>Delete Existing</button>
+        </form>
         @if($campaign->status === 'running')
             <form method="POST" action="{{ route('campaigns.pause', $campaign) }}">@csrf<button class="btn btn-outline-warning btn-sm"><i class="bi bi-pause me-1"></i>Pause</button></form>
         @elseif($campaign->status === 'paused')
@@ -199,6 +208,30 @@
         </div>
     @endif
 </div>
+
+<div class="modal fade" id="campaignConfirmModal" tabindex="-1" aria-labelledby="campaignConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold" id="campaignConfirmTitle">Confirm action</h5>
+                    <p class="text-muted small mb-0">Please review before continuing.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <div class="d-flex gap-3">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning flex-shrink-0"><i class="bi bi-exclamation-triangle"></i></div>
+                    <p class="mb-0 text-muted" id="campaignConfirmMessage">Are you sure you want to continue?</p>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="campaignConfirmButton">Continue</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -210,6 +243,32 @@
     .timeline{max-height:300px;overflow-y:auto}
 </style>
 <script>
+document.querySelectorAll('[data-confirm-target]').forEach(button => {
+    button.addEventListener('click', () => {
+        const modalEl = document.getElementById('campaignConfirmModal');
+        const title = document.getElementById('campaignConfirmTitle');
+        const message = document.getElementById('campaignConfirmMessage');
+        const confirmButton = document.getElementById('campaignConfirmButton');
+        const formId = button.dataset.confirmTarget;
+
+        title.textContent = button.dataset.confirmTitle || 'Confirm action';
+        message.textContent = button.dataset.confirmMessage || 'Are you sure you want to continue?';
+        confirmButton.textContent = button.dataset.confirmButton || 'Continue';
+        confirmButton.className = 'btn ' + (button.dataset.confirmStyle || 'btn-primary');
+        confirmButton.dataset.formId = formId;
+
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    });
+});
+
+document.getElementById('campaignConfirmButton')?.addEventListener('click', function() {
+    const form = document.getElementById(this.dataset.formId);
+    if (form) {
+        this.disabled = true;
+        form.submit();
+    }
+});
+
 (function(){
     const card = document.getElementById('progressCard');
     if (!card) return;

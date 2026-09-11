@@ -2,9 +2,10 @@
 @section('title', 'Find Projects')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-12 col-lg-9 col-xl-8">
-        <div class="card shadow-sm border-0">
+@php
+    $googlePlacesConfigured = app(\App\Services\Discovery\Providers\SearchApiDiscoveryProvider::class)->isConfigured();
+@endphp
+<div class="card shadow-sm border-0">
             <div class="card-body p-4 p-md-5">
                 <!-- Header -->
                 <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
@@ -17,7 +18,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('campaigns.store') }}">
+                <form method="POST" action="{{ route('campaigns.store') }}" id="campaignCreateForm">
                     @csrf
 
                     <!-- Location -->
@@ -123,12 +124,12 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="form-check border rounded-3 p-3 bg-white">
-                                    <input class="form-check-input" type="checkbox" name="sources[]" value="search_api" id="src-api">
+                                <div class="form-check border rounded-3 p-3 bg-white {{ $googlePlacesConfigured ? '' : 'opacity-75' }}">
+                                    <input class="form-check-input" type="checkbox" name="sources[]" value="search_api" id="src-api" @disabled(!$googlePlacesConfigured)>
                                     <label class="form-check-label fw-semibold" for="src-api">
-                                        <i class="bi bi-globe text-info me-1"></i> Google/LinkedIn API
+                                        <i class="bi bi-google text-info me-1"></i> Google Places API @if(!$googlePlacesConfigured)<span class="badge bg-secondary ms-1">Key required</span>@endif
                                     </label>
-                                    <div class="small text-muted mt-1">Connect via API key for real-time Google My Business or LinkedIn search results.</div>
+                                    <div class="small text-muted mt-1">Find Google-registered businesses and import only those without listed websites.</div>
                                 </div>
                             </div>
                         </div>
@@ -191,12 +192,10 @@
                 </form>
             </div>
         </div>
-    </div>
-</div>
 
 <script>
-document.getElementById('startBtn')?.addEventListener('click', function(e) {
-    const btn = this;
+document.getElementById('campaignCreateForm')?.addEventListener('submit', function() {
+    const btn = document.getElementById('startBtn');
     const icon = document.getElementById('startIcon');
     const text = document.getElementById('startText');
     const spinner = document.getElementById('startSpinner');

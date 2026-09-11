@@ -16,7 +16,8 @@ class FollowUpController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
             ->orderByRaw("case when status='pending' and scheduled_at<=now() then 0 when status='pending' then 1 else 2 end")
             ->orderBy('scheduled_at')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         $summary = [
             'overdue' => FollowUp::where('status', 'pending')->where('scheduled_at', '<=', now())->count(),

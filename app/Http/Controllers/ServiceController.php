@@ -11,7 +11,7 @@ class ServiceController extends Controller
 {
     public function index()
     {
-        $services = Service::withCount('rules')->orderBy('name')->paginate(15);
+        $services = Service::withCount('rules')->orderBy('name')->paginate(15)->withQueryString();
 
         return view('services.index', compact('services'));
     }

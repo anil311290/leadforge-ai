@@ -7,6 +7,9 @@ use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\FollowUpController;
+use App\Http\Controllers\FreelancerAccountController;
+use App\Http\Controllers\FreelancerBidController;
+use App\Http\Controllers\FreelancerSettingsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OpportunityController;
@@ -15,6 +18,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SettingsController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -33,13 +37,18 @@ Route::middleware('guest')->group(function () {
 
 Route::post('logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
+Route::get('/', function () {
+    return Auth::check()
+        ? redirect()->route('dashboard')
+        : view('welcome');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-    Route::get('/', fn () => redirect()->route('dashboard'));
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Profile & notifications
@@ -53,6 +62,8 @@ Route::middleware('auth')->group(function () {
     Route::post('campaigns', [CampaignController::class, 'store'])->name('campaigns.store');
     Route::get('campaigns/{campaign}', [CampaignController::class, 'show'])->name('campaigns.show');
     Route::get('campaigns/{campaign}/progress', [CampaignController::class, 'progress'])->name('campaigns.progress');
+    Route::delete('campaigns/{campaign}/leads', [CampaignController::class, 'destroyLeads'])->name('campaigns.leads.destroy');
+    Route::post('campaigns/{campaign}/regenerate', [CampaignController::class, 'regenerate'])->name('campaigns.regenerate');
     Route::post('campaigns/{campaign}/pause', [CampaignController::class, 'pause'])->name('campaigns.pause');
     Route::post('campaigns/{campaign}/resume', [CampaignController::class, 'resume'])->name('campaigns.resume');
     Route::post('campaigns/{campaign}/cancel', [CampaignController::class, 'cancel'])->name('campaigns.cancel');
@@ -64,12 +75,15 @@ Route::middleware('auth')->group(function () {
     Route::get('leads/import', [LeadController::class, 'importView'])->name('leads.import');
     Route::post('leads/import', [LeadController::class, 'import'])->name('leads.import.submit');
     Route::post('leads/{lead}/bulk-status', [LeadController::class, 'bulkStatus'])->name('leads.bulk-status');
+    Route::get('leads/{lead}/edit', [LeadController::class, 'edit'])->name('leads.edit');
+    Route::patch('leads/{lead}', [LeadController::class, 'update'])->name('leads.update');
     Route::get('leads/{lead}', [LeadController::class, 'show'])->name('leads.show');
     Route::delete('leads/{lead}', [LeadController::class, 'destroy'])->name('leads.destroy');
     Route::post('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.update-status');
     Route::post('leads/{lead}/analyse', [LeadController::class, 'analyse'])->name('leads.analyse');
     Route::post('leads/{lead}/claim', [LeadController::class, 'claim'])->name('leads.claim');
     Route::post('leads/{lead}/notes', [LeadController::class, 'addNote'])->name('leads.add-note');
+    Route::post('leads/{lead}/quotation', [EmailController::class, 'generateQuotation'])->name('quotations.generate');
 
     // Pipeline (kanban)
     Route::get('pipeline', [PipelineController::class, 'index'])->name('pipeline.index');
@@ -83,6 +97,8 @@ Route::middleware('auth')->group(function () {
     Route::get('emails', [EmailController::class, 'index'])->name('emails.index');
     Route::get('emails/pending', [EmailController::class, 'pending'])->name('emails.pending');
     Route::post('emails/{lead}/generate', [EmailController::class, 'generate'])->name('emails.generate');
+    Route::patch('emails/{email}', [EmailController::class, 'updateDraft'])->name('emails.update');
+    Route::delete('emails/{email}', [EmailController::class, 'destroyDraft'])->name('emails.destroy');
     Route::post('emails/{email}/approve', [EmailController::class, 'approve'])->name('emails.approve');
     Route::post('emails/{email}/send', [EmailController::class, 'send'])->name('emails.send');
 
@@ -93,6 +109,22 @@ Route::middleware('auth')->group(function () {
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+
+    // Freelancer.com auto-bidding
+    Route::get('freelancer/dashboard', [FreelancerBidController::class, 'dashboard'])->name('freelancer.dashboard');
+    Route::get('freelancer/bids', [FreelancerBidController::class, 'index'])->name('freelancer.bids.index');
+    Route::post('freelancer/bids/{bid}/approve', [FreelancerBidController::class, 'approve'])->name('freelancer.bids.approve');
+    Route::post('freelancer/bids/{bid}/reject', [FreelancerBidController::class, 'reject'])->name('freelancer.bids.reject');
+    Route::get('freelancer/accounts', [FreelancerAccountController::class, 'index'])->name('freelancer.accounts.index')->middleware('role:admin');
+    Route::get('freelancer/accounts/create', [FreelancerAccountController::class, 'create'])->name('freelancer.accounts.create')->middleware('role:admin');
+    Route::post('freelancer/accounts', [FreelancerAccountController::class, 'store'])->name('freelancer.accounts.store')->middleware('role:admin');
+    Route::get('freelancer/accounts/{account}/edit', [FreelancerAccountController::class, 'edit'])->name('freelancer.accounts.edit')->middleware('role:admin');
+    Route::patch('freelancer/accounts/{account}', [FreelancerAccountController::class, 'update'])->name('freelancer.accounts.update')->middleware('role:admin');
+    Route::delete('freelancer/accounts/{account}', [FreelancerAccountController::class, 'destroy'])->name('freelancer.accounts.destroy')->middleware('role:admin');
+    Route::post('freelancer/accounts/{account}/test', [FreelancerAccountController::class, 'testConnection'])->name('freelancer.accounts.test')->middleware('role:admin');
+    Route::post('freelancer/accounts/{account}/scan', [FreelancerAccountController::class, 'scanNow'])->name('freelancer.accounts.scan')->middleware('role:admin');
+    Route::get('freelancer/settings', [FreelancerSettingsController::class, 'index'])->name('freelancer.settings.index')->middleware('role:admin');
+    Route::post('freelancer/settings', [FreelancerSettingsController::class, 'update'])->name('freelancer.settings.update')->middleware('role:admin');
 
     // AI Usage
     Route::get('ai/usage', [AiUsageController::class, 'index'])->name('ai.usage');

@@ -54,4 +54,61 @@ class DataNormalizer
 
         return $digits !== '' ? $digits : null;
     }
+
+    public static function normalizeIndianMobile(?string $phone): ?string
+    {
+        $digits = self::normalizePhone($phone);
+        if (! $digits) {
+            return null;
+        }
+
+        if (str_starts_with($digits, '0')) {
+            $digits = substr($digits, 1);
+        }
+
+        if (str_starts_with($digits, '91') && strlen($digits) === 12) {
+            $digits = substr($digits, 2);
+        }
+
+        if (strlen($digits) !== 10 || ! preg_match('/^[6-9]\d{9}$/', $digits)) {
+            return null;
+        }
+
+        if (preg_match('/^(\d)\1{9}$/', $digits) || in_array($digits, ['1234567890', '9876543210'], true)) {
+            return null;
+        }
+
+        return $digits;
+    }
+
+    public static function normalizeWhatsappPhone(?string $phone, string $countryCode = '91'): ?string
+    {
+        $mobile = self::normalizeIndianMobile($phone);
+        if ($mobile) {
+            return $countryCode.$mobile;
+        }
+
+        $digits = self::normalizePhone($phone);
+        if (! $digits) {
+            return null;
+        }
+
+        if (str_starts_with($digits, '0'.$countryCode) && strlen($digits) === strlen($countryCode) + 11) {
+            return substr($digits, 1);
+        }
+
+        if (str_starts_with($digits, $countryCode) && strlen($digits) === strlen($countryCode) + 10) {
+            return $digits;
+        }
+
+        if (strlen($digits) === 11 && str_starts_with($digits, '0')) {
+            return $countryCode.substr($digits, 1);
+        }
+
+        if (strlen($digits) === 10) {
+            return $countryCode.$digits;
+        }
+
+        return $digits;
+    }
 }

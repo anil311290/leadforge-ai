@@ -2,6 +2,10 @@
 @section('title', $lead->company)
 
 @section('content')
+@php
+    $whatsappPhone = \App\Services\Discovery\DataNormalizer::normalizeWhatsappPhone($lead->phone);
+    $googleSearchUrl = 'https://www.google.com/search?q='.urlencode(trim($lead->company.' '.$lead->city.' '.$lead->location));
+@endphp
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <div>
         <a href="{{ route('leads.index') }}" class="small text-muted">&larr; Leads</a>
@@ -15,23 +19,31 @@
             @if($lead->normalized_domain)<a href="{{ $lead->website }}" target="_blank" rel="noopener">{{ $lead->normalized_domain }}</a> · @endif
             {{ $lead->industry ?? '—' }} · {{ $lead->city ?? $lead->location ?? '' }}
             @if($lead->email) · <i class="bi bi-envelope"></i> <a href="mailto:{{ $lead->email }}" class="text-muted text-decoration-none">{{ $lead->email }}</a>@endif
-            @if($lead->phone) · <i class="bi bi-telephone"></i> <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $lead->phone) }}" target="_blank" class="text-muted text-decoration-none" title="Open WhatsApp">{{ $lead->phone }} <i class="bi bi-whatsapp text-success"></i></a>@endif
+            @if($lead->phone && $whatsappPhone) · <i class="bi bi-telephone"></i> <a href="https://wa.me/{{ $whatsappPhone }}" target="_blank" class="text-muted text-decoration-none" title="Open WhatsApp">{{ $lead->phone }} <i class="bi bi-whatsapp text-success"></i></a>@endif
         </p>
     </div>
     <div class="d-flex gap-2">
         @if(!$lead->owner_id)
             <form method="POST" action="{{ route('leads.claim', $lead) }}">@csrf<button class="btn btn-outline-primary btn-sm"><i class="bi bi-person-plus me-1"></i>Claim</button></form>
         @endif
+        <a href="#overview" class="btn btn-outline-primary btn-sm" data-tab="overview"><i class="bi bi-flag me-1"></i>Update Status</a>
         @if($lead->normalized_domain && !$lead->analyses->count())
             <form method="POST" action="{{ route('leads.analyse', $lead) }}">@csrf<button class="btn btn-info btn-sm text-white"><i class="bi bi-motherboard me-1"></i>Analyse</button></form>
         @endif
         @if($lead->email)
             <form method="POST" action="{{ route('emails.generate', $lead) }}">@csrf<button class="btn btn-outline-primary btn-sm"><i class="bi bi-envelope-paper me-1"></i>Generate Email</button></form>
+        @elseif($whatsappPhone)
+            <a href="#emails" class="btn btn-outline-success btn-sm" data-tab="emails"><i class="bi bi-chat-dots me-1"></i>Prepare Message</a>
         @endif
+        <form method="POST" action="{{ route('quotations.generate', $lead) }}">@csrf<button class="btn btn-outline-dark btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Generate Quotation</button></form>
+        <a href="{{ $googleSearchUrl }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm"><i class="bi bi-google me-1"></i>Google Search</a>
+        <a href="{{ route('leads.edit', $lead) }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square me-1"></i>Edit Lead</a>
         <form method="POST" action="{{ route('followups.trigger', $lead) }}">@csrf<button class="btn btn-outline-warning btn-sm"><i class="bi bi-alarm me-1"></i>Schedule Follow-up</button></form>
         <div class="dropdown">
             <button class="btn btn-light btn-sm" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
             <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ $googleSearchUrl }}" target="_blank" rel="noopener"><i class="bi bi-google me-2"></i>Search on Google</a></li>
+            <li><a class="dropdown-item" href="{{ route('leads.edit', $lead) }}"><i class="bi bi-pencil-square me-2"></i>Edit lead</a></li>
                 <li><a class="dropdown-item" href="{{ route('opportunities.show', $lead) }}"><i class="bi bi-lightning-charge me-2"></i>Opportunity view</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
@@ -52,9 +64,9 @@
     <div class="col-6 col-md-3"><div class="card p-3 shadow-sm text-center"><div class="text-muted small">Status</div><div><span class="badge bg-light text-dark border">{{ $lead->status }}</span></div></div></div>
 </div>
 
-@if($lead->phone)
+@if($lead->phone && $whatsappPhone)
 <div class="mb-3">
-    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $lead->phone) }}" target="_blank" class="btn btn-success btn-sm">
+    <a href="https://wa.me/{{ $whatsappPhone }}" target="_blank" class="btn btn-success btn-sm">
         <i class="bi bi-whatsapp me-1"></i> Chat on WhatsApp — {{ $lead->phone }}
     </a>
 </div>
@@ -97,6 +109,43 @@ if (hash) {
 } else {
     document.querySelector('[data-tab="overview"]')?.classList.add('active-tab');
 }
+
+document.addEventListener('click', async function(e) {
+    const copyButton = e.target.closest('#copyOutreachMessage');
+    const whatsappButton = e.target.closest('#sendWhatsappMessage');
+    const copyDraftButton = e.target.closest('.copy-draft-message');
+    const whatsappDraftButton = e.target.closest('.send-whatsapp-draft');
+    const textarea = document.getElementById('outreachMessageText');
+
+    if (copyButton && textarea) {
+        await navigator.clipboard.writeText(textarea.value);
+        if (window.toastr) {
+            toastr.success('Message copied.');
+        }
+    }
+
+    if (whatsappButton && textarea) {
+        const phone = whatsappButton.dataset.phone;
+        if (!phone) return;
+
+        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(textarea.value), '_blank', 'noopener');
+    }
+
+    if (copyDraftButton) {
+        await navigator.clipboard.writeText(copyDraftButton.dataset.message || '');
+        if (window.toastr) {
+            toastr.success('Quotation copied.');
+        }
+    }
+
+    if (whatsappDraftButton) {
+        const phone = whatsappDraftButton.dataset.phone;
+        const message = whatsappDraftButton.dataset.message || '';
+        if (!phone || !message) return;
+
+        window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(message), '_blank', 'noopener');
+    }
+});
 </script>
 <div class="row g-3">
     <div class="col-12 col-xl-7">
@@ -195,19 +244,30 @@ if (hash) {
     </div>
     <div class="col-12 col-xl-5">
         <div class="card shadow-sm mb-3" id="overview">
-            <div class="card-header bg-white fw-bold">Update Status</div>
+            <div class="card-header bg-white fw-bold"><i class="bi bi-flag me-1 text-primary"></i>Update Lead Status</div>
             <div class="card-body">
-                <form method="POST" action="{{ route('leads.update-status', $lead) }}">
+                @if($errors->any())
+                    <div class="alert alert-danger py-2 small mb-3">
+                        <i class="bi bi-exclamation-triangle me-1"></i>{{ $errors->first() }}
+                    </div>
+                @endif
+                <div class="alert alert-light border py-2 small mb-3 d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Current status</span>
+                    <span class="badge bg-light text-dark border">{{ $lead->status }}</span>
+                </div>
+                <form method="POST" action="{{ route('leads.update-status', $lead) }}" id="statusUpdateForm">
                     @csrf
                     <div class="mb-2">
+                        <label class="form-label small fw-semibold">New status</label>
                         <select name="status" class="form-select form-select-sm">
                             @foreach(['DISCOVERED','NEW','ANALYZED','QUALIFIED','CONTACTED','REPLIED','INTERESTED','MEETING','PROPOSAL','NEGOTIATION','WON','LOST','NOT_INTERESTED','DO_NOT_CONTACT'] as $s)
-                                <option value="{{ $s }}" @selected($lead->status === $s)>{{ $s }}</option>
+                                <option value="{{ $s }}" @selected(old('status', $lead->status) === $s)>{{ $s }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <input type="text" name="next_action" class="form-control form-control-sm mb-2" placeholder="Next action (optional)">
-                    <button class="btn btn-sm btn-primary w-100">Update status</button>
+                    <label class="form-label small fw-semibold">Next action</label>
+                    <input type="text" name="next_action" class="form-control form-control-sm mb-2" placeholder="Next action (optional)" value="{{ old('next_action', $lead->next_action) }}">
+                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-check-lg me-1"></i>Save Status</button>
                 </form>
                 <hr>
                 <form method="POST" action="{{ route('leads.add-note', $lead) }}">
@@ -223,22 +283,53 @@ if (hash) {
         </div>
         <div class="card shadow-sm mb-3" id="emails">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <span class="fw-bold">Emails</span>
-                @if($lead->email)
-                    <form method="POST" action="{{ route('emails.generate', $lead) }}">@csrf<button class="btn btn-sm btn-primary"><i class="bi bi-magic me-1"></i>Generate draft</button></form>
-                @endif
+                <span class="fw-bold">{{ $lead->email ? 'Emails & Quotations' : 'Outreach & Quotations' }}</span>
+                <div class="d-flex gap-2">
+                    @if($lead->email)
+                        <form method="POST" action="{{ route('emails.generate', $lead) }}">@csrf<button class="btn btn-sm btn-primary"><i class="bi bi-magic me-1"></i>Email</button></form>
+                    @endif
+                </div>
             </div>
             <div class="card-body py-2">
+                <form method="POST" action="{{ route('quotations.generate', $lead) }}" class="border rounded p-2 mb-3 bg-light">
+                    @csrf
+                    <label class="form-label small fw-semibold mb-1">Quotation prompt / requirement</label>
+                    <textarea name="quotation_prompt" class="form-control form-control-sm mb-2" rows="3" placeholder="Example: website with 5 pages, product catalogue, WhatsApp enquiry, Google profile setup, 1 month support">{{ old('quotation_prompt') }}</textarea>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-sm btn-outline-dark flex-fill" name="generation_mode" value="template"><i class="bi bi-file-earmark-text me-1"></i>Template Draft</button>
+                        <button class="btn btn-sm btn-primary flex-fill" name="generation_mode" value="ai"><i class="bi bi-magic me-1"></i>Generate with AI</button>
+                    </div>
+                </form>
                 @if($lead->email)
                     <div class="alert alert-info py-2 small mb-3 d-flex align-items-center gap-2">
                         <i class="bi bi-envelope"></i>
                         <span><strong>Client Email:</strong> <a href="mailto:{{ $lead->email }}" class="text-decoration-none">{{ $lead->email }}</a></span>
                     </div>
+                @else
+                    @php
+                        $whatsappMessage = $lead->whatsappOutreachMessage();
+                        $phoneDigits = $whatsappPhone;
+                    @endphp
+                    <div class="alert alert-warning py-2 small mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-envelope-slash"></i>
+                        <span>No email found. Use this ready message for WhatsApp or manual outreach.</span>
+                    </div>
+                    <label class="form-label small fw-semibold">Ready message</label>
+                    <textarea class="form-control form-control-sm mb-2" rows="8" id="outreachMessageText">{{ $whatsappMessage }}</textarea>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button type="button" class="btn btn-sm btn-light" id="copyOutreachMessage"><i class="bi bi-clipboard me-1"></i>Copy Message</button>
+                        @if($phoneDigits)
+                            <button type="button" class="btn btn-sm btn-success" id="sendWhatsappMessage" data-phone="{{ $phoneDigits }}"><i class="bi bi-whatsapp me-1"></i>Send on WhatsApp</button>
+                        @else
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled><i class="bi bi-telephone-x me-1"></i>No phone number</button>
+                        @endif
+                    </div>
                 @endif
                 @forelse($lead->emails as $email)
+                    @php($isQuotation = str_starts_with(strtolower((string) $email->subject), 'quotation'))
                     <div class="border-bottom py-2">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="small fw-semibold">{{ Str::limit($email->subject, 42) }}</span>
+                            <span class="small fw-semibold">@if($isQuotation)<i class="bi bi-file-earmark-text me-1 text-dark"></i>@endif{{ Str::limit($email->subject, 42) }}</span>
                             <span class="badge {{ $email->status==='sent'?'text-bg-success':($email->status==='pending_approval'?'text-bg-warning':'bg-light text-dark border') }}">{{ $email->status }}</span>
                         </div>
                         <div class="small text-muted d-flex flex-wrap gap-2">
@@ -251,10 +342,40 @@ if (hash) {
                         @if(in_array($email->status, ['pending_approval','approved']))
                             <div class="mt-2">
                                 <form method="POST" action="{{ route('emails.approve', $email) }}" class="d-inline">@csrf<button class="btn btn-sm btn-success">Approve &amp; queue</button></form>
-                                <form method="POST" action="{{ route('emails.send', $email) }}" class="d-inline">@csrf<button class="btn btn-sm btn-light">Send now</button></form>
+                                @if($lead->email)
+                                    <form method="POST" action="{{ route('emails.send', $email) }}" class="d-inline">@csrf<button class="btn btn-sm btn-light">Send now</button></form>
+                                @endif
                             </div>
                         @endif
-                        <details class="small text-muted mt-1"><summary>Preview</summary><div class="bg-light p-2 rounded mt-1">{{ $email->body }}</div></details>
+                        @if($isQuotation && !$lead->email)
+                            <div class="mt-2 d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-light copy-draft-message" data-message="{{ e($email->body) }}"><i class="bi bi-clipboard me-1"></i>Copy Quotation</button>
+                                @if($whatsappPhone)
+                                    <button type="button" class="btn btn-sm btn-success send-whatsapp-draft" data-phone="{{ $whatsappPhone }}" data-message="{{ e($email->body) }}"><i class="bi bi-whatsapp me-1"></i>Send Quotation on WhatsApp</button>
+                                @endif
+                            </div>
+                        @endif
+                        <details class="small text-muted mt-2">
+                            <summary>{{ $email->status === 'sent' ? 'Preview' : 'Preview / edit draft' }}</summary>
+                            @if($email->status === 'sent')
+                                <div class="bg-light p-2 rounded mt-1">{{ $email->body }}</div>
+                            @else
+                                <form method="POST" action="{{ route('emails.update', $email) }}" class="bg-light p-2 rounded mt-2">
+                                    @csrf
+                                    @method('PATCH')
+                                    <label class="form-label small fw-semibold mb-1">Subject</label>
+                                    <input type="text" name="subject" class="form-control form-control-sm mb-2" value="{{ old('subject', $email->subject) }}">
+                                    <label class="form-label small fw-semibold mb-1">Message</label>
+                                    <textarea name="body" class="form-control form-control-sm mb-2" rows="8">{{ old('body', $email->body) }}</textarea>
+                                    <button class="btn btn-sm btn-primary"><i class="bi bi-save me-1"></i>Save Draft</button>
+                                </form>
+                                <form method="POST" action="{{ route('emails.destroy', $email) }}" class="delete-form mt-2" data-confirm="Delete this draft quotation/message?">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(this)"><i class="bi bi-trash me-1"></i>Delete Draft</button>
+                                </form>
+                            @endif
+                        </details>
                     </div>
                 @empty
                     <p class="text-muted small py-2 mb-0">No emails yet.@if(!$lead->email) Add an email to the lead to enable outreach.@endif</p>
