@@ -86,9 +86,14 @@ class FreelancerAccount extends Model
 
     public function todayBidCount(): int
     {
+        $tz = config('app.timezone', 'Asia/Kolkata');
+
+        $startOfDay = now($tz)->startOfDay()->utc();
+        $endOfDay = now($tz)->endOfDay()->utc();
+
         return $this->bids()
             ->whereIn('status', ['submitted', 'pending'])
-            ->whereDate('created_at', now()->toDateString())
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
             ->count();
     }
 
