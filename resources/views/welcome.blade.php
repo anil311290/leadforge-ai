@@ -3,85 +3,597 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="LeadForge AI turns business signals into qualified project opportunities and ready-to-send outreach.">
-    <title>{{ config('leadforge.product') }} | Find work worth winning</title>
+    <meta name="description" content="LeadForge AI automates client discovery, deep website signal analysis, tailored proposal generation, and Freelancer.com auto-bidding.">
+    <title>{{ config('leadforge.product') }} — Sales Intelligence & Project Discovery</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root { --ink:#142b3a; --muted:#65747c; --paper:#f7f5f0; --accent:#f4b66d; --teal:#0f766e; --line:rgba(20,43,58,.14); --mono:'DM Mono',monospace; --sans:'Manrope',sans-serif; }
-        * { box-sizing:border-box; }
-        html { scroll-behavior:smooth; }
-        body { margin:0; color:var(--ink); background:var(--paper); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
-        a { color:inherit; text-decoration:none; }
-        .shell { width:min(1180px, calc(100% - 48px)); margin:auto; }
-        .topbar { display:flex; align-items:center; justify-content:space-between; padding:24px 0; }
-        .brand { display:flex; gap:10px; align-items:center; font-size:18px; font-weight:800; letter-spacing:-.04em; }
-        .brand-mark { display:grid; place-items:center; width:30px; height:30px; color:var(--paper); background:var(--teal); border-radius:9px; font-size:15px; font-weight:800; }
-        .nav { display:flex; align-items:center; gap:30px; color:#43565d; font-size:13px; font-weight:700; }
-        .nav a:hover { color:var(--ink); }
-        .nav-cta { padding:11px 17px; color:var(--paper); background:var(--ink); border-radius:7px; }
-        .nav-cta:hover { color:var(--paper) !important; background:#29424b; }
-        .menu-toggle { display:none; border:0; background:none; color:var(--ink); font-size:24px; cursor:pointer; }
-        .hero { position:relative; display:grid; grid-template-columns:1.03fr .97fr; align-items:center; gap:65px; min-height:650px; padding:65px 0 85px; overflow:hidden; }
-        .hero:before { content:""; position:absolute; z-index:-1; width:440px; height:440px; top:35px; right:-145px; border:1px solid rgba(20,43,58,.12); border-radius:50%; box-shadow:0 0 0 42px rgba(244,182,109,.18), 0 0 0 84px rgba(244,182,109,.09); }
-        .eyebrow { display:flex; gap:9px; align-items:center; margin-bottom:22px; color:#4d665e; font:500 11px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
-        .eyebrow i { width:8px; height:8px; background:var(--accent); border-radius:50%; }
-        h1 { max-width:660px; margin:0; font-size:clamp(44px, 6vw, 78px); line-height:1.02; letter-spacing:-.075em; font-weight:800; }
-        h1 em { color:var(--teal); font-style:normal; }
-        .hero-copy { max-width:510px; margin:25px 0 34px; color:var(--muted); font-size:17px; line-height:1.7; }
-        .actions { display:flex; gap:13px; align-items:center; flex-wrap:wrap; }
-        .button { display:inline-flex; align-items:center; gap:10px; padding:15px 20px; border:1px solid var(--ink); border-radius:7px; font-size:13px; font-weight:800; transition:transform .2s, background .2s; }
-        .button:hover { transform:translateY(-2px); }
-        .button-primary { color:var(--ink); background:var(--accent); border-color:var(--accent); }
-        .button-secondary { background:transparent; }
-        .button svg { width:15px; height:15px; }
-        .proof { display:flex; gap:23px; margin-top:43px; color:var(--muted); font-size:11px; }
-        .proof strong { display:block; color:var(--ink); font-size:21px; letter-spacing:-.06em; }
-        .proof span { display:block; margin-top:3px; }
-        .dashboard-card { position:relative; padding:11px; background:#dbe9e7; border:1px solid rgba(20,43,58,.16); border-radius:18px; box-shadow:20px 24px 0 rgba(20,43,58,.08); transform:rotate(2deg); }
-        .window { overflow:hidden; background:#fff; border:1px solid rgba(17,35,43,.13); border-radius:11px; }
-        .window-top { display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid #e8eeea; font-size:9px; font-weight:800; }
-        .dots { display:flex; gap:4px; } .dots i { width:5px; height:5px; display:block; background:#cedad3; border-radius:50%; }
-        .mini-app { display:grid; grid-template-columns:86px 1fr; min-height:330px; }
-        .mini-sidebar { padding:16px 9px; background:#142b3a; color:#9eafb0; font-size:7px; }
-        .mini-sidebar b { display:block; padding:8px 6px 23px; color:#f5f8f4; font-size:10px; letter-spacing:-.05em; }
-        .mini-sidebar span { display:block; padding:8px 6px; } .mini-sidebar .active { color:var(--ink); background:var(--accent); border-radius:4px; }
-        .mini-content { padding:18px; background:#fbfcfa; }
-        .mini-content header { display:flex; justify-content:space-between; margin-bottom:18px; font-size:10px; font-weight:800; }
-        .mini-button { padding:6px 8px; color:var(--ink); background:var(--accent); border-radius:3px; font-size:7px; }
-        .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:17px; }
-        .stat { padding:10px 8px; background:#fff; border:1px solid #e7ece8; border-radius:5px; } .stat small { color:#84918e; font-size:6px; } .stat strong { display:block; margin-top:5px; font-size:15px; letter-spacing:-.06em; }
-        .lead-list { padding:12px; background:#fff; border:1px solid #e7ece8; border-radius:5px; } .list-title { display:flex; justify-content:space-between; margin-bottom:11px; font-size:8px; font-weight:800; } .list-title span { color:#8b9994; font-size:6px; font-weight:500; }
-        .lead { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid #edf1ee; font-size:7px; } .lead p { margin:0; font-weight:800; } .lead small { display:block; margin-top:3px; color:#91a09b; font-size:6px; font-weight:500; } .score { padding:4px 5px; color:#0f625d; background:#d9efea; border-radius:3px; font:500 7px var(--mono); }
-        .signal { position:absolute; right:-25px; bottom:35px; display:flex; align-items:center; gap:8px; padding:10px 12px; color:#eef5ed; background:var(--ink); border-radius:7px; box-shadow:0 8px 20px rgba(20,43,58,.2); font-size:9px; font-weight:700; } .signal b { display:grid; place-items:center; width:18px; height:18px; color:var(--ink); background:var(--accent); border-radius:50%; font-size:10px; }
-        .strip { padding:22px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); color:#82918b; font:500 10px var(--mono); letter-spacing:.12em; text-transform:uppercase; } .strip .shell { display:flex; justify-content:space-between; gap:20px; }
-        .section { padding:115px 0; } .section-heading { display:flex; justify-content:space-between; gap:40px; align-items:end; margin-bottom:45px; } .kicker { margin:0 0 13px; color:var(--teal); font:500 11px var(--mono); text-transform:uppercase; letter-spacing:.08em; } h2 { max-width:560px; margin:0; font-size:clamp(32px, 4vw, 51px); line-height:1.05; letter-spacing:-.065em; } .section-heading > p { max-width:310px; margin:0; color:var(--muted); font-size:14px; line-height:1.65; }
-        .features { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; } .feature { min-height:225px; padding:27px; border:1px solid var(--line); border-radius:9px; background:rgba(255,255,255,.42); } .feature:nth-child(2), .feature:nth-child(6) { background:var(--ink); color:#eef5ec; } .feature:nth-child(2) p, .feature:nth-child(6) p { color:#afc1bb; } .feature-icon { display:grid; place-items:center; width:36px; height:36px; margin-bottom:32px; color:var(--ink); background:var(--accent); border-radius:50%; font-size:17px; } .feature h3 { margin:0 0 11px; font-size:18px; letter-spacing:-.04em; } .feature p { margin:0; color:var(--muted); font-size:13px; line-height:1.6; }
-        .feature-tag { display:inline-block; margin-top:17px; color:var(--teal); font:500 9px var(--mono); letter-spacing:.08em; text-transform:uppercase; } .feature:nth-child(2) .feature-tag, .feature:nth-child(6) .feature-tag { color:var(--accent); }
-        .product-note { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px; padding:22px 26px; color:#496a68; background:#dbe9e7; border-radius:9px; font-size:13px; line-height:1.6; } .product-note strong { display:block; margin-bottom:5px; color:var(--ink); font-size:15px; }
-        .workflow { background:var(--ink); color:#eef5ec; } .workflow .section-heading > p { color:#a3b6b0; } .workflow .kicker { color:var(--accent); } .steps { display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-top:1px solid rgba(238,245,236,.2); } .step { padding:25px 22px 5px 0; border-right:1px solid rgba(238,245,236,.2); } .step:not(:first-child) { padding-left:22px; } .step:last-child { border:0; } .step-number { color:var(--accent); font:500 11px var(--mono); } .step h3 { margin:44px 0 10px; font-size:17px; letter-spacing:-.04em; } .step p { margin:0; color:#9cafaa; font-size:12px; line-height:1.65; }
-        .cta { padding:96px 0 108px; text-align:center; background:#dbe9e7; } .cta h2 { max-width:700px; margin:0 auto 25px; } .cta p { max-width:450px; margin:0 auto 28px; color:#496a68; font-size:14px; line-height:1.6; } .cta .button { background:var(--teal); color:#f4f7f3; border-color:var(--teal); }
-        footer { padding:24px 0; background:#0c1c22; color:#90a5a3; font-size:11px; } footer .shell { display:flex; justify-content:space-between; gap:20px; } footer a { color:#dce7df; }
-        @media (max-width:800px) { .shell { width:min(100% - 32px, 560px); } .topbar { padding:18px 0; } .menu-toggle { display:block; } .nav { display:none; position:absolute; z-index:5; left:16px; right:16px; top:65px; flex-direction:column; align-items:stretch; gap:0; padding:9px; background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 12px 30px rgba(20,43,58,.12); } .nav.open { display:flex; } .nav a { padding:12px; } .nav-cta { text-align:center; } .hero { display:block; min-height:0; padding:55px 0 80px; } .hero:before { right:-260px; top:350px; } h1 { font-size:clamp(43px, 13vw, 66px); } .hero-copy { font-size:15px; } .dashboard-card { margin:65px 10px 0 0; transform:rotate(1deg); } .signal { right:-10px; bottom:25px; } .strip .shell { flex-wrap:wrap; justify-content:flex-start; gap:12px 24px; } .section { padding:75px 0; } .section-heading { display:block; margin-bottom:30px; } .section-heading > p { margin-top:20px; } .features, .steps, .product-note { grid-template-columns:1fr; } .feature { min-height:0; } .feature-icon { margin-bottom:28px; } .step, .step:not(:first-child) { padding:22px 0; border-right:0; border-bottom:1px solid rgba(238,245,236,.2); } .step h3 { margin-top:19px; } footer .shell { flex-direction:column; } }
-    </style>
+    <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/landing.css') }}">
 </head>
 <body>
-    <header class="shell topbar">
-        <a class="brand" href="{{ url('/') }}"><span class="brand-mark">L</span> LeadForge <span style="color:var(--teal)">AI</span></a>
-        <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false" onclick="document.querySelector('.nav').classList.toggle('open'); this.setAttribute('aria-expanded', document.querySelector('.nav').classList.contains('open'))">&#9776;</button>
-        <nav class="nav" aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#capabilities">Product</a><a href="{{ route('login') }}">Sign in</a><a class="nav-cta" href="{{ route('register') }}">Start finding work</a></nav>
-    </header>
+    <!-- Ambient Background Lighting -->
+    <div class="bg-ambient" aria-hidden="true">
+        <div class="ambient-grid"></div>
+        <div class="ambient-blob-1"></div>
+        <div class="ambient-blob-2"></div>
+    </div>
+
+    <!-- Floating Glass Navbar -->
+    <div class="navbar-wrapper">
+        <header class="navbar">
+            <a class="brand-logo" href="{{ url('/') }}">
+                <span class="brand-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+                <span>LeadForge <span class="brand-badge">AI</span></span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#workflow">How It Works</a></li>
+                <li><a href="#freelancer">Auto-Bidding</a></li>
+                <li><a href="#comparison">Why LeadForge</a></li>
+                <li><a href="#faq">FAQ</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                @auth
+                    <a href="{{ route('dashboard') }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="btn btn-outline btn-sm">Sign in</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary btn-sm btn-glow">
+                        <span>Get Started Free</span> <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                @endauth
+                <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+        </header>
+    </div>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNav">
+        <ul class="mobile-nav-links">
+            <li><a href="#features" onclick="toggleMobileNav()">Features</a></li>
+            <li><a href="#workflow" onclick="toggleMobileNav()">How It Works</a></li>
+            <li><a href="#freelancer" onclick="toggleMobileNav()">Auto-Bidding</a></li>
+            <li><a href="#comparison" onclick="toggleMobileNav()">Why LeadForge</a></li>
+            <li><a href="#faq" onclick="toggleMobileNav()">FAQ</a></li>
+        </ul>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            @auth
+                <a href="{{ route('dashboard') }}" class="btn btn-primary w-100"><i class="bi bi-speedometer2"></i> Open Dashboard</a>
+            @else
+                <a href="{{ route('login') }}" class="btn btn-secondary w-100">Sign in to Account</a>
+                <a href="{{ route('register') }}" class="btn btn-primary w-100">Start Finding Work</a>
+            @endauth
+        </div>
+    </div>
+
     <main>
-        <section class="shell hero"><div><div class="eyebrow"><i></i> Sales intelligence for builders</div><h1>Find work worth <em>winning.</em></h1><p class="hero-copy">LeadForge AI turns public business signals into qualified opportunities, sharp project recommendations, and outreach that sounds like you.</p><div class="actions"><a class="button button-primary" href="{{ route('register') }}">Build your pipeline <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a><a class="button button-secondary" href="#how-it-works">See how it works</a></div><div class="proof"><div><strong>10x</strong><span>less research</span></div><div><strong>24/7</strong><span>signal discovery</span></div><div><strong>1 view</strong><span>to close the loop</span></div></div></div>
-            <div class="dashboard-card" aria-label="LeadForge dashboard preview"><div class="window"><div class="window-top"><div class="dots"><i></i><i></i><i></i></div><span>LEADFORGE / OPPORTUNITIES</span><span style="color:var(--teal)">● LIVE</span></div><div class="mini-app"><aside class="mini-sidebar"><b>LeadForge <small>AI</small></b><span class="active">Overview</span><span>Campaigns</span><span>Pipeline</span><span>Outreach</span><span>Reports</span></aside><div class="mini-content"><header><span>Opportunity overview</span><span class="mini-button">+ Find projects</span></header><div class="stat-grid"><div class="stat"><small>QUALIFIED LEADS</small><strong>248</strong></div><div class="stat"><small>AVG. SCORE</small><strong>86%</strong></div><div class="stat"><small>PIPELINE VALUE</small><strong>₹24.8L</strong></div></div><div class="lead-list"><div class="list-title">Priority opportunities <span>View all →</span></div><div class="lead"><div><p>Northstar Dental</p><small>Website redesign · Mumbai</small></div><span class="score">92 / 100</span></div><div class="lead"><div><p>Olive & Oak Studio</p><small>E-commerce · Bengaluru</small></div><span class="score">88 / 100</span></div><div class="lead"><div><p>Arden Logistics</p><small>Fleet management · Pune</small></div><span class="score">84 / 100</span></div></div></div></div></div><div class="signal"><b>✓</b> 18 new signals found</div></div>
+        <!-- HERO SECTION -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="hero-pill">
+                    <span class="pulse-dot"></span>
+                    <span>Sales Intelligence & Project Discovery 2.0</span>
+                </div>
+
+                <h1 class="hero-title">
+                    Turn Public Business Signals Into <br>
+                    <span class="gradient-text">High-Value Client Deals</span>
+                </h1>
+
+                <p class="hero-desc">
+                    LeadForge AI automates client discovery, technical website auditing, custom proposal writing, and Freelancer.com autopilot bidding in one unified revenue engine.
+                </p>
+
+                <div class="hero-cta-group">
+                    <a href="{{ route('register') }}" class="btn btn-primary btn-lg btn-glow">
+                        <i class="bi bi-rocket-takeoff"></i>
+                        <span>Start Finding Projects Free</span>
+                    </a>
+                    <a href="#workflow" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-play-circle"></i>
+                        <span>See How It Works</span>
+                    </a>
+                </div>
+
+                <div class="hero-trust">
+                    <span><i class="bi bi-check-circle-fill"></i> No credit card required</span>
+                    <span><i class="bi bi-check-circle-fill"></i> Real-time signal crawler</span>
+                    <span><i class="bi bi-check-circle-fill"></i> Multi-account Freelancer support</span>
+                </div>
+
+                <!-- Interactive App Dashboard Mockup -->
+                <div class="mockup-wrapper">
+                    <div class="mockup-inner">
+                        <div class="mockup-header">
+                            <div class="window-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <div class="mockup-search-bar">
+                                <i class="bi bi-search"></i>
+                                <span>leadforge.app/campaigns/real-time-discovery</span>
+                            </div>
+                            <div class="mockup-status-live">
+                                <i class="bi bi-circle-fill" style="font-size: 8px;"></i>
+                                <span>LIVE ENGINE</span>
+                            </div>
+                        </div>
+                        <div class="mockup-body">
+                            <div class="mockup-sidebar">
+                                <div class="mockup-nav-item active"><i class="bi bi-speedometer2"></i> Overview</div>
+                                <div class="mockup-nav-item"><i class="bi bi-bullseye"></i> Find Projects</div>
+                                <div class="mockup-nav-item"><i class="bi bi-people"></i> Qualified Leads</div>
+                                <div class="mockup-nav-item"><i class="bi bi-kanban"></i> Deal Pipeline</div>
+                                <div class="mockup-nav-item"><i class="bi bi-send"></i> Freelancer Bids</div>
+                                <div class="mockup-nav-item"><i class="bi bi-envelope"></i> Smart Outreach</div>
+                            </div>
+                            <div class="mockup-content">
+                                <div class="mockup-stat-row">
+                                    <div class="mockup-stat-card">
+                                        <div class="label">Discovered Leads</div>
+                                        <div class="val">482</div>
+                                        <div class="trend"><i class="bi bi-arrow-up-right"></i> +34 today</div>
+                                    </div>
+                                    <div class="mockup-stat-card">
+                                        <div class="label">Avg AI Score</div>
+                                        <div class="val">88%</div>
+                                        <div class="trend"><i class="bi bi-lightning-charge"></i> High Intent</div>
+                                    </div>
+                                    <div class="mockup-stat-card">
+                                        <div class="label">Pipeline Value</div>
+                                        <div class="val">₹38.5L</div>
+                                        <div class="trend"><i class="bi bi-graph-up"></i> 14 Opportunities</div>
+                                    </div>
+                                    <div class="mockup-stat-card">
+                                        <div class="label">Active Bids</div>
+                                        <div class="val">26</div>
+                                        <div class="trend" style="color:#38bdf8;"><i class="bi bi-check2"></i> 80% Floor Protected</div>
+                                    </div>
+                                </div>
+
+                                <div class="mockup-table-card">
+                                    <div class="mockup-table-header">
+                                        <span>Highest Potential Opportunities</span>
+                                        <span style="color: var(--accent-teal); font-size: 0.75rem; cursor: pointer;">Auto-Scored by AI <i class="bi bi-stars"></i></span>
+                                    </div>
+                                    <div class="mockup-row" style="background: rgba(255,255,255,0.02); font-weight: 700; color: var(--text-dim); text-transform: uppercase; font-size: 0.68rem;">
+                                        <span>Target Business</span>
+                                        <span class="hide-mobile">Detected Gap</span>
+                                        <span>AI Fit Score</span>
+                                        <span>Est. Deal</span>
+                                        <span>Action</span>
+                                    </div>
+                                    <div class="mockup-row">
+                                        <div>
+                                            <div class="company-name">Apex Global Logistics</div>
+                                            <div class="company-loc">Transport & Fleet · Mumbai</div>
+                                        </div>
+                                        <div class="hide-mobile" style="color: #cbd5e1;">Custom Tracking Portal</div>
+                                        <div><span class="badge-score score-hot">94 / 100</span></div>
+                                        <div style="font-weight: 700; color: #38bdf8;">₹3,50,000</div>
+                                        <div><span class="btn btn-primary btn-sm" style="padding: 3px 10px; font-size: 0.7rem;">Draft Outreach</span></div>
+                                    </div>
+                                    <div class="mockup-row">
+                                        <div>
+                                            <div class="company-name">Horizon Dental Care</div>
+                                            <div class="company-loc">Healthcare · Bengaluru</div>
+                                        </div>
+                                        <div class="hide-mobile" style="color: #cbd5e1;">Website Redesign + Booking</div>
+                                        <div><span class="badge-score score-high">89 / 100</span></div>
+                                        <div style="font-weight: 700; color: #38bdf8;">₹1,20,000</div>
+                                        <div><span class="btn btn-primary btn-sm" style="padding: 3px 10px; font-size: 0.7rem;">Draft Outreach</span></div>
+                                    </div>
+                                    <div class="mockup-row">
+                                        <div>
+                                            <div class="company-name">Aura Luxe Fashion</div>
+                                            <div class="company-loc">Retail · New Delhi</div>
+                                        </div>
+                                        <div class="hide-mobile" style="color: #cbd5e1;">E-Commerce & CRM Sync</div>
+                                        <div><span class="badge-score score-mid">84 / 100</span></div>
+                                        <div style="font-weight: 700; color: #38bdf8;">₹2,40,000</div>
+                                        <div><span class="btn btn-primary btn-sm" style="padding: 3px 10px; font-size: 0.7rem;">Draft Outreach</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
-        <div class="strip"><div class="shell"><span>Built for focused teams</span><span>Freelancers</span><span>Studios</span><span>Agencies</span><span>Sales teams</span></div></div>
-        <section class="section shell" id="capabilities"><div class="section-heading"><div><p class="kicker">The complete workspace</p><h2>One system for every stage of the deal.</h2></div><p>Every feature in LeadForge is built to move a real opportunity forward, from first search to closed project.</p></div><div class="features"><article class="feature"><div class="feature-icon">⌕</div><h3>Discovery campaigns</h3><p>Find businesses from public web signals, CSV imports, manual URLs and connected search sources.</p><span class="feature-tag">Find projects</span></article><article class="feature"><div class="feature-icon">✦</div><h3>AI lead analysis</h3><p>Understand website gaps, business fit and project potential with a clear opportunity score.</p><span class="feature-tag">Score every lead</span></article><article class="feature"><div class="feature-icon">◎</div><h3>Lead intelligence</h3><p>Keep contacts, notes, source details, status and recommendations together in one lead record.</p><span class="feature-tag">Know the account</span></article><article class="feature"><div class="feature-icon">↗</div><h3>Opportunity view</h3><p>Turn analysis into a recommended service, estimated value and a focused next action.</p><span class="feature-tag">See the why</span></article><article class="feature"><div class="feature-icon">▦</div><h3>Visual pipeline</h3><p>Move work through your sales stages, track momentum and keep your next win visible.</p><span class="feature-tag">Move deals forward</span></article><article class="feature"><div class="feature-icon">✉</div><h3>Outreach automation</h3><p>Generate, approve and send relevant emails with quotation support and reply tracking.</p><span class="feature-tag">Start conversations</span></article><article class="feature"><div class="feature-icon">◷</div><h3>Follow-up sequences</h3><p>Stay consistent with scheduled follow-ups that stop when a prospect replies or converts.</p><span class="feature-tag">Never lose context</span></article><article class="feature"><div class="feature-icon">↯</div><h3>Freelancer auto-bidding</h3><p>Connect Freelancer accounts, scan relevant projects and review bids before approval.</p><span class="feature-tag">Bid with intent</span></article><article class="feature"><div class="feature-icon">⌁</div><h3>Reports and controls</h3><p>See pipeline value, win rate, AI usage, services, audit activity and team settings.</p><span class="feature-tag">Operate clearly</span></article></div><div class="product-note"><div><strong>Built for the whole revenue motion</strong>Discovery, analysis, outreach and follow-up live in one connected workspace.</div><div><strong>Human approval stays in control</strong>AI accelerates research and writing while you decide what to send, pursue and win.</div></div></section>
-        <section class="workflow section" id="how-it-works"><div class="shell"><div class="section-heading"><div><p class="kicker">The workflow</p><h2>Less hunting. More building.</h2></div><p>LeadForge makes prospecting feel like a system, not a second full-time job.</p></div><div class="steps"><article class="step"><span class="step-number">01 / DISCOVER</span><h3>Define your ideal client</h3><p>Tell us where you work and what you build. We handle the search.</p></article><article class="step"><span class="step-number">02 / UNDERSTAND</span><h3>Read the opportunity</h3><p>Review the website signals, gaps and recommended services in one view.</p></article><article class="step"><span class="step-number">03 / PRIORITISE</span><h3>Focus your energy</h3><p>Use AI-backed scores to build a pipeline with a reason behind every lead.</p></article><article class="step"><span class="step-number">04 / CONNECT</span><h3>Start the right conversation</h3><p>Send thoughtful outreach, track replies and keep momentum moving.</p></article></div></div></section>
-        <section class="cta"><div class="shell"><h2>Your next great project is already out there.</h2><p>Make finding it the most organised part of your week.</p><a class="button" href="{{ route('register') }}">Start with LeadForge AI <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div></section>
+
+        <!-- STATS TICKER STRIP -->
+        <div class="stats-strip">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-num">10x</div>
+                        <div class="stat-label">Faster Prospect Research</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">80%+</div>
+                        <div class="stat-label">Budget Floor Margin Safeguard</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">0%</div>
+                        <div class="stat-label">Duplicate AI Proposals</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">24/7</div>
+                        <div class="stat-label">Signal & Lead Discovery</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BENTO FEATURES GRID -->
+        <section class="section" id="features">
+            <div class="container">
+                <div class="section-header">
+                    <div class="section-kicker">
+                        <i class="bi bi-grid-fill"></i> Full Revenue Suite
+                    </div>
+                    <h2 class="section-title">Everything you need to discover, qualify & win.</h2>
+                    <p class="section-desc">
+                        No more cold emailing random lists or competing in generic bidding races. LeadForge AI connects every step with actual verified signals.
+                    </p>
+                </div>
+
+                <div class="bento-grid">
+                    <!-- Card 1: Discovery -->
+                    <div class="bento-card bento-span-2">
+                        <span class="bento-pill-tag">Intelligence Engine</span>
+                        <div class="bento-icon"><i class="bi bi-geo-alt"></i></div>
+                        <h3 class="bento-card-title">Multi-Channel Discovery Campaigns</h3>
+                        <p class="bento-card-desc">
+                            Target local businesses by city, radius, and industry across Google Places, custom search queries, CSV list uploads, and raw URLs. LeadForge automatically verifies contact emails, phone numbers, and WhatsApp channels.
+                        </p>
+                        <ul class="bento-feature-list">
+                            <li><i class="bi bi-check2-circle"></i> Automatic phone & WhatsApp normalization</li>
+                            <li><i class="bi bi-check2-circle"></i> Deduplication across all historical discovery campaigns</li>
+                            <li><i class="bi bi-check2-circle"></i> Batch execution with pause, resume & regenerate controls</li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 2: AI Lead Analysis -->
+                    <div class="bento-card">
+                        <span class="bento-pill-tag">Deep Auditing</span>
+                        <div class="bento-icon"><i class="bi bi-cpu"></i></div>
+                        <h3 class="bento-card-title">Deep AI Site Analysis</h3>
+                        <p class="bento-card-desc">
+                            Our crawler inspects technologies, mobile usability, performance bottlenecks, and missing capabilities to build a compelling technical sales pitch.
+                        </p>
+                        <ul class="bento-feature-list">
+                            <li><i class="bi bi-check2-circle"></i> Missing capabilities detection</li>
+                            <li><i class="bi bi-check2-circle"></i> Technology gap scoring</li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 3: Opportunity Scoring -->
+                    <div class="bento-card">
+                        <span class="bento-pill-tag">8-Point Matrix</span>
+                        <div class="bento-icon"><i class="bi bi-stars"></i></div>
+                        <h3 class="bento-card-title">0–100 Opportunity Ranking</h3>
+                        <p class="bento-card-desc">
+                            Every lead is mathematically evaluated on business fit, urgency, company potential, and budget scale so you only invest time on high-converting prospects.
+                        </p>
+                        <ul class="bento-feature-list">
+                            <li><i class="bi bi-check2-circle"></i> HOT, HIGH, MEDIUM & LOW classifications</li>
+                            <li><i class="bi bi-check2-circle"></i> Automated budget range projections</li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 4: Freelancer Auto-Bidding -->
+                    <div class="bento-card bento-span-2" id="freelancer">
+                        <span class="bento-pill-tag">Autopilot Marketplace</span>
+                        <div class="bento-icon"><i class="bi bi-send-check"></i></div>
+                        <h3 class="bento-card-title">Freelancer.com Smart Auto-Bidding</h3>
+                        <p class="bento-card-desc">
+                            Connect multiple Freelancer.com accounts with individual OAuth tokens, experience profiles, and custom writing styles. Automatically places bids with our smart 80% budget floor, 5-unit rounding, and private internal estimates for negotiation.
+                        </p>
+                        <ul class="bento-feature-list">
+                            <li><i class="bi bi-check2-circle"></i> 100% unique proposals per account (no repetitive templates)</li>
+                            <li><i class="bi bi-check2-circle"></i> Account-wise performance dashboard with daily bid capacity limits</li>
+                            <li><i class="bi bi-check2-circle"></i> Private internal costing & realistic timeline tracker</li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 5: Outreach & Quotation -->
+                    <div class="bento-card">
+                        <span class="bento-pill-tag">Omnichannel Outreach</span>
+                        <div class="bento-icon"><i class="bi bi-envelope-paper"></i></div>
+                        <h3 class="bento-card-title">Smart Email & WhatsApp</h3>
+                        <p class="bento-card-desc">
+                            Generate context-aware cold emails referencing the exact problems found on the lead's site. Schedule automated follow-ups that stop when the client replies.
+                        </p>
+                        <ul class="bento-feature-list">
+                            <li><i class="bi bi-check2-circle"></i> 1-click WhatsApp web messaging</li>
+                            <li><i class="bi bi-check2-circle"></i> Automated commercial quotation generator</li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 6: Pipeline Kanban -->
+                    <div class="bento-card bento-span-2">
+                        <span class="bento-pill-tag">Deal Management</span>
+                        <div class="bento-icon"><i class="bi bi-kanban"></i></div>
+                        <h3 class="bento-card-title">Visual Sales Pipeline & Activity Log</h3>
+                        <p class="bento-card-desc">
+                            Drag-and-drop deal board tracking stages from Discovered to Proposal, Negotiation, and Won. Complete audit logs and team activity tracking for full transparency.
+                        </p>
+                        <ul class="bento-feature-list">
+                            <li><i class="bi bi-check2-circle"></i> Real-time pipeline value & win rate calculations</li>
+                            <li><i class="bi bi-check2-circle"></i> Lead claiming, internal notes & audit trails</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- WORKFLOW JOURNEY -->
+        <section class="section" id="workflow" style="background: rgba(13, 22, 39, 0.3); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+            <div class="container">
+                <div class="section-header">
+                    <div class="section-kicker">
+                        <i class="bi bi-diagram-3-fill"></i> Streamlined Workflow
+                    </div>
+                    <h2 class="section-title">From first search to signed project in 4 steps.</h2>
+                    <p class="section-desc">
+                        Turn prospecting from chaotic manual outreach into an organized, repeatable software pipeline.
+                    </p>
+                </div>
+
+                <div class="workflow-grid">
+                    <div class="workflow-card">
+                        <div class="step-num">STEP 01</div>
+                        <h3>Launch Campaign</h3>
+                        <p>Define target location, keywords, or import business lists. LeadForge scrapes public signals and gathers domain profiles.</p>
+                    </div>
+
+                    <div class="workflow-card">
+                        <div class="step-num">STEP 02</div>
+                        <h3>AI Signal Audit</h3>
+                        <p>Our analysis engine checks digital gaps, missing features, and calculates realistic service quotes with opportunity scores.</p>
+                    </div>
+
+                    <div class="workflow-card">
+                        <div class="step-num">STEP 03</div>
+                        <h3>Generate Proposals</h3>
+                        <p>AI crafts distinct, tailored proposals incorporating account experience level, selected writing tone, and matched portfolio items.</p>
+                    </div>
+
+                    <div class="workflow-card">
+                        <div class="step-num">STEP 04</div>
+                        <h3>Engage & Close</h3>
+                        <p>Send approved cold emails, trigger follow-up sequences, connect via WhatsApp, and track deal stages in the visual pipeline.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COMPARISON SECTION -->
+        <section class="section" id="comparison">
+            <div class="container">
+                <div class="section-header">
+                    <div class="section-kicker">
+                        <i class="bi bi-award-fill"></i> Competitive Edge
+                    </div>
+                    <h2 class="section-title">Manual Prospecting vs LeadForge AI</h2>
+                    <p class="section-desc">
+                        Compare traditional freelance hunting against an automated signal-driven pipeline.
+                    </p>
+                </div>
+
+                <div class="comparison-wrapper">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Feature / Workflow</th>
+                                <th class="highlight"><i class="bi bi-lightning-charge-fill"></i> LeadForge AI</th>
+                                <th>Manual Hunting</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="feature-name">Client Discovery Speed</td>
+                                <td class="leadforge-val">Hundreds of leads in 60 seconds</td>
+                                <td style="color: var(--text-dim);">10–15 businesses per hour</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Website Technical Audit</td>
+                                <td class="leadforge-val">Automated deep AI crawl & signal scoring</td>
+                                <td style="color: var(--text-dim);">Manual inspection & guesswork</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Proposal Uniqueness</td>
+                                <td class="leadforge-val">100% unique per account tone & experience</td>
+                                <td style="color: var(--text-dim);">Generic copy-paste templates</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Freelancer.com Bidding</td>
+                                <td class="leadforge-val">Autopilot multi-account with 80% budget floor</td>
+                                <td style="color: var(--text-dim);">Manual bidding, racing to the bottom</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Cost & Timeline Calculations</td>
+                                <td class="leadforge-val">Private internal cost & timeline guidance</td>
+                                <td style="color: var(--text-dim);">Unstructured estimations</td>
+                            </tr>
+                            <tr>
+                                <td class="feature-name">Follow-up Sequences</td>
+                                <td class="leadforge-val">Automated drip stopping on reply</td>
+                                <td style="color: var(--text-dim);">Easily forgotten in inbox</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ SECTION -->
+        <section class="section" id="faq" style="background: rgba(13, 22, 39, 0.2); border-top: 1px solid var(--border-subtle);">
+            <div class="container">
+                <div class="section-header">
+                    <div class="section-kicker">
+                        <i class="bi bi-question-circle-fill"></i> Common Questions
+                    </div>
+                    <h2 class="section-title">Frequently Asked Questions</h2>
+                    <p class="section-desc">Everything you need to know about LeadForge AI and our discovery engine.</p>
+                </div>
+
+                <div class="faq-grid">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            <span>How does Freelancer.com auto-bidding work?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            You connect your Freelancer.com developer OAuth key with your budget and keyword rules. LeadForge scans newly posted projects, filters out low-budget or irrelevant posts, and uses AI to generate custom tailored proposals. With Auto-Submit ON, bids are placed automatically within your daily limit. With Auto-Submit OFF, bids are saved for 1-click manual review.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            <span>Are generated proposals unique for different accounts?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Yes! Every account configured in LeadForge has its own name, profile title, experience years, and proposal style (Technical, Direct, Consultative, Conversational, or Agile). The AI strictly crafts unique phrasing, hooks, and perspectives so multiple accounts never submit identical bids.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            <span>What discovery sources are supported?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            LeadForge supports Google Places search API, AI web search, manual URL entries, and bulk CSV uploads. You can target specific cities, industries, and business types to build an instant pipeline.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            <span>How does the 80% budget floor rule protect pricing?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Instead of placing bids at the minimum rate, LeadForge calculates bids strictly above 80% of the client's published maximum budget ceiling and rounds the amount up to a clean multiple of 5 in the project's currency. It also calculates a separate private internal cost to guide your final client negotiations.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HIGH CONVERTING CALL TO ACTION -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-box">
+                    <h2 class="cta-title">Ready to Win High-Paying Projects?</h2>
+                    <p class="cta-subtitle">
+                        Stop hunting manually. Join modern agencies and freelancers building automated sales pipelines with LeadForge AI.
+                    </p>
+                    <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+                        <a href="{{ route('register') }}" class="btn btn-primary btn-lg btn-glow">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                            <span>Create Free Account</span>
+                        </a>
+                        <a href="{{ route('login') }}" class="btn btn-secondary btn-lg">
+                            <span>Sign in to Dashboard</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
-    <footer><div class="shell"><span>© {{ date('Y') }} {{ config('leadforge.owner') }}</span><span><a href="{{ route('login') }}">Sign in</a> &nbsp;·&nbsp; Built with clarity</span></div></footer>
+
+    <!-- MODERN FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a class="brand-logo" href="{{ url('/') }}">
+                        <span class="brand-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+                        <span>LeadForge <span class="brand-badge">AI</span></span>
+                    </a>
+                    <p>
+                        Sales intelligence, automated client discovery, and Freelancer.com auto-bidding platform for digital builders.
+                    </p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#workflow">Workflow</a></li>
+                        <li><a href="#freelancer">Auto-Bidding</a></li>
+                        <li><a href="#comparison">Comparison</a></li>
+                        <li><a href="{{ route('login') }}">Sign In</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Modules</h4>
+                    <ul>
+                        <li><a href="{{ route('register') }}">Discovery Campaigns</a></li>
+                        <li><a href="{{ route('register') }}">AI Website Scan</a></li>
+                        <li><a href="{{ route('register') }}">Opportunity Matrix</a></li>
+                        <li><a href="{{ route('register') }}">Deal Pipeline</a></li>
+                        <li><a href="{{ route('register') }}">Email Automation</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Compliance & Security</h4>
+                    <p style="font-size: 0.8rem; line-height: 1.6; color: var(--text-dim);">
+                        Compliant public data discovery only. OAuth tokens stored with AES-256 encryption at rest. Human-in-the-loop review safeguards.
+                    </p>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div>© {{ date('Y') }} {{ config('leadforge.owner') }} · {{ config('leadforge.product') }}. All rights reserved.</div>
+                <div>Find the Right Business · Discover the Right Project</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Vanilla JS -->
+    <script>
+        // Mobile Navigation Toggle
+        const navToggle = document.getElementById('navToggle');
+        const mobileNav = document.getElementById('mobileNav');
+
+        if (navToggle && mobileNav) {
+            navToggle.addEventListener('click', function() {
+                mobileNav.classList.toggle('open');
+                const icon = navToggle.querySelector('i');
+                if (icon) {
+                    icon.classList.toggle('bi-list');
+                    icon.classList.toggle('bi-x-lg');
+                }
+            });
+        }
+
+        function toggleMobileNav() {
+            if (mobileNav) {
+                mobileNav.classList.remove('open');
+                const icon = navToggle ? navToggle.querySelector('i') : null;
+                if (icon) {
+                    icon.classList.add('bi-list');
+                    icon.classList.remove('bi-x-lg');
+                }
+            }
+        }
+
+        // FAQ Accordion
+        function toggleFaq(btn) {
+            const item = btn.closest('.faq-item');
+            if (item) {
+                item.classList.toggle('active');
+            }
+        }
+    </script>
 </body>
 </html>

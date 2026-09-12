@@ -5,15 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sign in — {{ config('leadforge.product') }}</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { font-family:'Inter', sans-serif; }
-        body { background:#f4f6fa; }
-        .auth-card { max-width:420px; margin:8vh auto; border-radius:.9rem; border:1px solid #e4e9f0; }
-        .brand { font-weight:800; font-size:1.3rem; }
-        .brand span { color:#2f86f6; }
-    </style>
+    <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
 </head>
 <body>
 <div class="auth-card card shadow-sm p-4">
@@ -56,6 +49,6 @@
         {{ config('leadforge.owner') }}
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('assets/vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
 </body>
 </html>

@@ -26,10 +26,15 @@
                     </td>
                     <td class="small">{{ $account->auto_submit_bids ? 'Yes' : 'Draft only' }}</td>
                     <td class="small">{{ $account->max_bids_per_day }}/day</td>
-                    <td class="small">{{ $account->bids_count }}</td>
+                    <td class="small">
+                        <a href="{{ route('freelancer.bids.index', ['account_id' => $account->id]) }}" class="fw-semibold text-decoration-none">
+                            {{ $account->bids_count }} {{ Str::plural('bid', $account->bids_count) }} <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                    </td>
                     <td class="small">{{ $account->last_scanned_at?->diffForHumans() ?? 'Never' }}</td>
                     <td class="text-nowrap">
                         <div class="d-flex gap-1">
+                            <a href="{{ route('freelancer.bids.index', ['account_id' => $account->id]) }}" class="btn btn-sm btn-outline-info" title="View bids for {{ $account->name }}"><i class="bi bi-send"></i></a>
                             <form action="{{ route('freelancer.accounts.test', $account) }}" method="POST" class="test-connection-form">
                                 @csrf
                                 <button type="submit" class="btn btn-sm btn-outline-primary" title="Test connection"><i class="bi bi-plug"></i></button>

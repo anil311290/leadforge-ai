@@ -58,6 +58,8 @@ class FreelancerApiClient
             'job_details' => 'true',
             'user_details' => 'true',
             'budget_details' => 'true',
+            'sort_field' => 'time_updated',
+            'project_statuses' => ['open'],
         ], $filters);
 
         $response = $this->request()->get('/api/projects/0.1/projects/active/', $query);

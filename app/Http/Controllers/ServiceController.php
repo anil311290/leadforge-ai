@@ -6,6 +6,7 @@ use App\Models\Service;
 use App\Models\ServiceRule;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ServiceController extends Controller
 {
@@ -34,10 +35,10 @@ class ServiceController extends Controller
         ]);
 
         $data['slug'] = $data['slug'] ?? \Illuminate\Support\Str::slug($data['name']);
-        $data['is_active'] = $request->boolean('is_active', true);
+        $data['is_active'] = $request->boolean('is_active', false);
 
         Service::create($data);
-        AuditService::record(auth()->user(), 'service_created', 'Service', null, null, ['name' => $data['name']]);
+        AuditService::record(Auth::user(), 'service_created', 'Service', null, null, ['name' => $data['name']]);
 
         return redirect()->route('services.index')->with('success', 'Service created: '.$data['name']);
     }
@@ -59,7 +60,7 @@ class ServiceController extends Controller
         ]);
 
         $service->rules()->create($data);
-        AuditService::record(auth()->user(), 'service_rule_added', 'ServiceRule', null, $data);
+        AuditService::record(Auth::user(), 'service_rule_added', 'ServiceRule', null, $data);
 
         return back()->with('success', 'Rule added.');
     }
@@ -67,7 +68,7 @@ class ServiceController extends Controller
     public function deleteRule(Service $service, ServiceRule $rule)
     {
         $rule->delete();
-        AuditService::record(auth()->user(), 'service_rule_deleted', 'ServiceRule', $rule->id);
+        AuditService::record(Auth::user(), 'service_rule_deleted', 'ServiceRule', $rule->id);
 
         return back()->with('success', 'Rule removed.');
     }

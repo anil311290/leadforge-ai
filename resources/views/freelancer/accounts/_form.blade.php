@@ -30,7 +30,23 @@
             <option value="0" @selected(old('proposal_use_ai', $account->proposal_use_ai ?? null) === false || old('proposal_use_ai') === '0')>No, template only</option>
         </select>
     </div>
-    <div class="col-md-8"><label class="form-label fw-semibold">Profile title</label><input type="text" name="profile_title" class="form-control" value="{{ old('profile_title', $account->profile_title ?? '') }}" placeholder="Leave blank to use the global default"></div>
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Experience (Years)</label>
+        <input type="number" min="0" max="50" name="experience_years" class="form-control" value="{{ old('experience_years', $account->experience_years ?? 5) }}" placeholder="e.g. 5">
+        <div class="form-text">Years of experience to highlight in proposals.</div>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Proposal style / tone</label>
+        <select name="proposal_style" class="form-select">
+            <option value="direct" @selected(old('proposal_style', $account->proposal_style ?? 'direct') === 'direct')>Direct & Results-focused</option>
+            <option value="technical" @selected(old('proposal_style', $account->proposal_style ?? '') === 'technical')>Technical & Architecture-first</option>
+            <option value="consultative" @selected(old('proposal_style', $account->proposal_style ?? '') === 'consultative')>Consultative & Solution-oriented</option>
+            <option value="conversational" @selected(old('proposal_style', $account->proposal_style ?? '') === 'conversational')>Conversational & Friendly</option>
+            <option value="agile" @selected(old('proposal_style', $account->proposal_style ?? '') === 'agile')>Agile & Fast Delivery</option>
+        </select>
+        <div class="form-text">Ensures proposals for different accounts are never identical.</div>
+    </div>
+    <div class="col-md-12"><label class="form-label fw-semibold">Profile title</label><input type="text" name="profile_title" class="form-control" value="{{ old('profile_title', $account->profile_title ?? '') }}" placeholder="Leave blank to use the global default"></div>
     <div class="col-12"><label class="form-label fw-semibold">Profile summary</label><textarea name="profile_summary" class="form-control" rows="3" placeholder="Leave blank to use the global default">{{ old('profile_summary', $account->profile_summary ?? '') }}</textarea></div>
     <div class="col-12"><label class="form-label fw-semibold">Portfolio URL</label><input type="url" name="portfolio_url" class="form-control" value="{{ old('portfolio_url', $account->portfolio_url ?? '') }}" placeholder="Leave blank to use the global default"><div class="form-text">Generic fallback link, used only when no specific past project below matches the client's request.</div></div>
     <div class="col-12">
@@ -40,9 +56,15 @@
     </div>
 
     <div class="col-md-6">
-        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="is_active" value="1" {{ old('is_active', $account->is_active ?? true) ? 'checked' : '' }}><label class="form-check-label">Active (included in scheduled scans)</label></div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $account ? $account->is_active : true) ? 'checked' : '' }}>
+            <label class="form-check-label fw-semibold" for="is_active">Active (included in scheduled scans)</label>
+        </div>
     </div>
     <div class="col-md-6">
-        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="auto_submit_bids" value="1" {{ old('auto_submit_bids', $account->auto_submit_bids ?? false) ? 'checked' : '' }}><label class="form-check-label">Auto-submit bids (off = draft for review)</label></div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="auto_submit_bids" id="auto_submit_bids" value="1" {{ old('auto_submit_bids', $account->auto_submit_bids ?? false) ? 'checked' : '' }}>
+            <label class="form-check-label fw-semibold" for="auto_submit_bids">Auto-submit bids (off = draft for review)</label>
+        </div>
     </div>
 </div>

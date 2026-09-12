@@ -2,56 +2,6 @@
 @section('title', 'Freelancer Bid Tracking')
 
 @section('content')
-<style>
-    .bid-table { font-size:.78rem; }
-    .bid-table { min-width:1080px; border-collapse:separate; border-spacing:0; }
-    .bid-table th { position:sticky; top:0; z-index:2; padding:.72rem .65rem; color:#64748b; background:#f8fafc; border-bottom:1px solid #dfe7f0; font-size:.66rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; }
-    .bid-table td { padding:.78rem .65rem; border-bottom:1px solid #edf1f5; vertical-align:middle; }
-    .bid-table tbody tr { transition:background .15s ease, box-shadow .15s ease; }
-    .bid-table tbody tr:nth-child(even) { background:#fbfcfe; }
-    .bid-table tbody tr:hover { background:#f0f6ff; box-shadow:inset 3px 0 0 #2f86f6; }
-    .bid-table td:first-child { min-width:155px; max-width:190px; }
-    .bid-table td:nth-child(2) { max-width:145px; }
-    .bid-table td:nth-child(4), .bid-table td:nth-child(5), .bid-table td:nth-child(6), .bid-table td:nth-child(7) { min-width:112px; }
-    .bid-table td:nth-child(8) { min-width:85px; }
-    .bid-table td:nth-child(9) { min-width:92px; }
-    .bid-table td:first-child a { display:inline-block; max-width:175px; overflow:hidden; text-overflow:ellipsis; vertical-align:bottom; white-space:nowrap; font-weight:750; }
-    .bid-table .proposal-preview { display:block; max-width:135px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .bid-table .small { font-size:.75rem !important; }
-    .bid-table .text-muted { font-size:.64rem !important; }
-    .bid-table .badge { padding:.38rem .55rem; font-size:.66rem; font-weight:700; letter-spacing:.01em; }
-    .bid-table .view-proposal-btn { color:#286dcc; font-size:.7rem; font-weight:700; text-decoration:none; }
-    .bid-table .view-proposal-btn:hover { color:#174f9f; text-decoration:underline; }
-    .bid-table-wrap { overflow:auto; border-radius:0 0 .5rem .5rem; scrollbar-color:#b7c6d8 #f1f5f9; scrollbar-width:thin; }
-    .bid-table-wrap::-webkit-scrollbar { height:8px; }
-    .bid-table-wrap::-webkit-scrollbar-track { background:#f1f5f9; }
-    .bid-table-wrap::-webkit-scrollbar-thumb { background:#b7c6d8; border-radius:99px; }
-    .table-toolbar { background:#fff; border-bottom:1px solid #e8eef5; }
-    .bid-table .sort-link { display:inline-flex; align-items:center; gap:.25rem; color:#64748b; text-decoration:none; }
-    .bid-table .sort-link:hover { color:#1d65b5; text-decoration:none; }
-    .bid-table .sort-link i { font-size:.65rem; }
-    @media (max-width:767px) {
-            .bid-table { font-size:.72rem; }
-        .bid-table th { padding:.55rem .45rem; font-size:.62rem; }
-        .bid-table td { padding:.55rem .45rem; }
-        .bid-table .small { font-size:.69rem !important; }
-    }
-    @media (min-width:768px) {
-        .bid-table { min-width:100%; table-layout:fixed; }
-        .bid-table th:nth-child(1), .bid-table td:nth-child(1) { width:15%; }
-        .bid-table th:nth-child(2), .bid-table td:nth-child(2) { width:12%; }
-        .bid-table th:nth-child(3), .bid-table td:nth-child(3) { width:9%; }
-        .bid-table th:nth-child(4), .bid-table td:nth-child(4) { width:11%; }
-        .bid-table th:nth-child(5), .bid-table td:nth-child(5) { width:9%; }
-        .bid-table th:nth-child(6), .bid-table td:nth-child(6) { width:10%; }
-        .bid-table th:nth-child(7), .bid-table td:nth-child(7) { width:10%; }
-        .bid-table th:nth-child(8), .bid-table td:nth-child(8) { width:8%; }
-        .bid-table th:nth-child(9), .bid-table td:nth-child(9) { width:8%; }
-        .bid-table th:nth-child(10), .bid-table td:nth-child(10) { width:8%; }
-        .bid-table td:first-child, .bid-table td:nth-child(2) { min-width:0; max-width:none; }
-        .bid-table td:first-child a, .bid-table .proposal-preview { max-width:100%; }
-    }
-</style>
 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
     <div><h4 class="fw-bold mb-1">Bid Tracking</h4><p class="text-muted small mb-0">Every bid attempt across all connected Freelancer.com accounts.</p></div>
     <div class="d-flex gap-2"><a href="{{ route('freelancer.bids.export', request()->except('page')) }}" class="btn btn-outline-success btn-sm"><i class="bi bi-download me-1"></i>Export CSV</a><button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#howItWorksModal"><i class="bi bi-question-circle me-1"></i>How auto-bidding works</button></div>
@@ -207,10 +157,25 @@
 
 @section('scripts')
 <script>
+function decodeHtmlEntities(str) {
+    if (!str) return '';
+    const txt = document.createElement('textarea');
+    let prev = '';
+    let current = String(str);
+    while (current !== prev && (current.includes('&') || current.includes('&#'))) {
+        prev = current;
+        txt.innerHTML = current;
+        current = txt.value;
+    }
+    return current;
+}
+
 document.querySelectorAll('.view-proposal-btn').forEach(btn => {
     btn.addEventListener('click', function () {
-        document.getElementById('proposalModalTitle').textContent = 'Proposal — ' + this.dataset.project;
-        document.getElementById('proposalModalBody').textContent = this.dataset.proposal;
+        const project = decodeHtmlEntities(this.dataset.project);
+        const proposal = decodeHtmlEntities(this.dataset.proposal);
+        document.getElementById('proposalModalTitle').textContent = 'Proposal — ' + project;
+        document.getElementById('proposalModalBody').textContent = proposal;
         new bootstrap.Modal(document.getElementById('proposalModal')).show();
     });
 });

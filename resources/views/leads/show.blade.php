@@ -22,7 +22,7 @@
             @if($lead->phone && $whatsappPhone) · <i class="bi bi-telephone"></i> <a href="https://wa.me/{{ $whatsappPhone }}" target="_blank" class="text-muted text-decoration-none" title="Open WhatsApp">{{ $lead->phone }} <i class="bi bi-whatsapp text-success"></i></a>@endif
         </p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
         @if(!$lead->owner_id)
             <form method="POST" action="{{ route('leads.claim', $lead) }}">@csrf<button class="btn btn-outline-primary btn-sm"><i class="bi bi-person-plus me-1"></i>Claim</button></form>
         @endif
@@ -81,19 +81,6 @@
     <a href="#activity" class="btn btn-sm btn-outline-primary" data-tab="activity"><i class="bi bi-activity me-1"></i>Activity</a>
 </div>
 
-<style>
-.tab-btn.active-tab {
-    background: #0d6efd !important;
-    color: #fff !important;
-    border-color: #0d6efd !important;
-}
-.tab-btn {
-    transition: all .15s ease;
-}
-.tab-btn:hover {
-    background: #e9ecef;
-}
-</style>
 <script>
 document.querySelectorAll('[data-tab]').forEach(link => {
     link.addEventListener('click', function(e) {

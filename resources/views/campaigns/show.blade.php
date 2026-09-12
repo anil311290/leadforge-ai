@@ -8,7 +8,7 @@
         <h4 class="fw-bold mb-0">{{ $campaign->name }}</h4>
         <p class="text-muted small mb-0"><i class="bi bi-geo-alt me-1"></i>{{ $campaign->location }} @if($campaign->radius_km)· {{ $campaign->radius_km }} km @endif</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
         <form method="POST" action="{{ route('campaigns.regenerate', $campaign) }}" id="regenerateLeadsForm">
             @csrf
             <button type="button" class="btn btn-primary btn-sm" data-confirm-target="regenerateLeadsForm" data-confirm-title="Regenerate leads?" data-confirm-message="This will delete existing leads from this campaign and generate fresh leads using the same campaign settings." data-confirm-button="Regenerate Leads" data-confirm-style="btn-primary"><i class="bi bi-arrow-clockwise me-1"></i>Regenerate Leads</button>
@@ -235,13 +235,6 @@
 @endsection
 
 @section('scripts')
-<style>
-    .stage-dot{width:44px;height:44px;border-radius:50%;background:#eef1f6;color:#a3adbf;font-size:1.1rem;transition:all .3s}
-    .stage-dot.active{background:#1e6fd9;color:#fff;box-shadow:0 0 0 4px rgba(30,111,217,.15)}
-    .stage-dot.done{background:#10b981;color:#fff}
-    #progressBar{transition:width .6s ease}
-    .timeline{max-height:300px;overflow-y:auto}
-</style>
 <script>
 document.querySelectorAll('[data-confirm-target]').forEach(button => {
     button.addEventListener('click', () => {

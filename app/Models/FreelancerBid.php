@@ -39,6 +39,33 @@ class FreelancerBid extends Model
         return $this->belongsTo(FreelancerAccount::class, 'freelancer_account_id');
     }
 
+    public function getProposalTextAttribute($value): string
+    {
+        if (! $value) {
+            return '';
+        }
+
+        return html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    public function getProjectTitleAttribute($value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        return html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    public function getErrorMessageAttribute($value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        return html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
     public function getInternalCostAttribute($value): ?float
     {
         if ($value !== null) {

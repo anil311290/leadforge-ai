@@ -2,41 +2,6 @@
 @section('title', 'Freelancer Overview')
 
 @section('content')
-<style>
-    .freelancer-hero { background:linear-gradient(135deg,#0e1e3a 0%,#17365f 100%); color:#fff; border-radius:1rem; overflow:hidden; position:relative; }
-    .freelancer-hero:after { content:""; position:absolute; width:240px; height:240px; right:-65px; top:-100px; border:1px solid rgba(255,255,255,.13); border-radius:50%; box-shadow:0 0 0 30px rgba(94,162,255,.08),0 0 0 60px rgba(94,162,255,.05); }
-    .freelancer-hero .eyebrow { color:#9ec5ff; font-size:.7rem; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
-    .freelancer-hero h1 { font-size:clamp(1.5rem,3vw,2.25rem); letter-spacing:-.045em; }
-    .freelancer-hero p { color:#b9cbe2; max-width:570px; }
-    .dashboard-card { border:1px solid #e3e9f0; border-radius:.85rem; box-shadow:0 .25rem .9rem rgba(20,42,75,.05); }
-    .dashboard-card .card-header { background:transparent; border-bottom:1px solid #edf1f5; }
-    .metric-card { min-height:126px; position:relative; overflow:hidden; }
-    .metric-card:after { content:""; position:absolute; width:70px; height:70px; right:-23px; bottom:-30px; background:rgba(94,162,255,.1); border-radius:50%; }
-    .metric-label { color:#77859a; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
-    .metric-value { color:#172b48; font-size:1.8rem; font-weight:800; letter-spacing:-.06em; }
-    .metric-help { color:#8b98a9; font-size:.75rem; }
-    .metric-icon { width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; border-radius:.65rem; font-size:1.05rem; }
-    .chart-wrap { height:240px; }
-    .status-legend { display:grid; grid-template-columns:repeat(3,1fr); gap:.65rem 1.25rem; margin-top:1rem; padding-top:1rem; border-top:1px solid #edf1f5; }
-    .status-legend-item { display:flex; justify-content:space-between; align-items:center; gap:.5rem; color:#66758a; font-size:.76rem; white-space:nowrap; }
-    .status-dot { width:8px; height:8px; display:inline-block; margin-right:.4rem; border-radius:50%; }
-    .account-progress { height:7px; background:#e8edf4; }
-    .account-progress .progress-bar { background:#2f86f6; }
-    .account-meta { color:#8190a3; font-size:.75rem; }
-    .dashboard-link { display:inline-flex; align-items:center; gap:.35rem; color:#286dcc; font-size:.78rem; font-weight:700; text-decoration:none; white-space:nowrap; }
-    .dashboard-link:hover { color:#174f9f; text-decoration:none; }
-    .dashboard-link i { font-size:.8rem; transition:transform .18s ease; }
-    .dashboard-link:hover i { transform:translate(2px,-1px); }
-    .project-link { color:#1b5fba; font-weight:700; text-decoration:none; }
-    .project-link:hover { color:#123f7d; text-decoration:underline; text-underline-offset:3px; }
-    .filter-bar { border:1px solid #dfe7f0; border-radius:.85rem; background:#fff; box-shadow:0 .25rem .9rem rgba(20,42,75,.04); }
-    .filter-bar label { color:#63738a; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
-    .activity-table td, .activity-table th { white-space:nowrap; }
-    .activity-table td:first-child { white-space:normal; min-width:210px; }
-    .status-badge { font-size:.7rem; letter-spacing:.02em; }
-    @media (max-width:767px) { .freelancer-hero .btn { width:100%; } .chart-wrap { height:210px; } .status-legend { grid-template-columns:repeat(2,1fr); gap:.6rem .8rem; } }
-</style>
-
 <div class="freelancer-hero p-4 p-md-5 mb-4">
     <div class="position-relative" style="z-index:1;">
         <div class="eyebrow mb-2"><i class="bi bi-bar-chart-line me-1"></i> Freelancer command center</div>
@@ -45,9 +10,9 @@
                 <h1 class="fw-bold mb-2">Your bidding performance, at a glance.</h1>
                 <p class="mb-0">Track account health, scan activity, bid progress and project value from one focused workspace.</p>
             </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('freelancer.bids.index', $selectedAccountId ? ['account_id' => $selectedAccountId] : []) }}" class="btn btn-light btn-sm"><i class="bi bi-send me-1"></i> Review bids</a>
-                <a href="{{ route('freelancer.accounts.index') }}" class="btn btn-outline-light btn-sm"><i class="bi bi-person-badge me-1"></i> Accounts</a>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('freelancer.bids.index', $selectedAccountId ? ['account_id' => $selectedAccountId] : []) }}" class="btn btn-light btn-sm text-nowrap"><i class="bi bi-send me-1"></i> Review bids</a>
+                <a href="{{ route('freelancer.accounts.index') }}" class="btn btn-outline-light btn-sm text-nowrap"><i class="bi bi-person-badge me-1"></i> Accounts</a>
             </div>
         </div>
     </div>

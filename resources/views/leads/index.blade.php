@@ -2,13 +2,6 @@
 @section('title', 'Leads')
 
 @section('content')
-<style>
-@media (min-width: 768px) {
-    .leads-table-wrap {
-        overflow: visible;
-    }
-}
-</style>
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <div>
         <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">

@@ -7,6 +7,7 @@ use App\Models\FreelancerAccount;
 use App\Services\AuditService;
 use App\Services\Freelancer\FreelancerApiClient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FreelancerAccountController extends Controller
 {
@@ -26,8 +27,8 @@ class FreelancerAccountController extends Controller
     {
         $data = $this->validatedData($request);
 
-        $account = FreelancerAccount::create($data + ['user_id' => auth()->id()]);
-        AuditService::record(auth()->user(), 'freelancer_account_created', 'FreelancerAccount', $account->id, null, ['name' => $account->name]);
+        $account = FreelancerAccount::create($data + ['user_id' => Auth::id()]);
+        AuditService::record(Auth::user(), 'freelancer_account_created', 'FreelancerAccount', $account->id, null, ['name' => $account->name]);
 
         return redirect()->route('freelancer.accounts.index')->with('success', 'Freelancer account added: '.$account->name);
     }
@@ -46,7 +47,7 @@ class FreelancerAccountController extends Controller
         }
 
         $account->update($data);
-        AuditService::record(auth()->user(), 'freelancer_account_updated', 'FreelancerAccount', $account->id);
+        AuditService::record(Auth::user(), 'freelancer_account_updated', 'FreelancerAccount', $account->id);
 
         return redirect()->route('freelancer.accounts.index')->with('success', 'Freelancer account updated: '.$account->name);
     }
@@ -55,7 +56,7 @@ class FreelancerAccountController extends Controller
     {
         $name = $account->name;
         $account->delete();
-        AuditService::record(auth()->user(), 'freelancer_account_deleted', 'FreelancerAccount', null, ['name' => $name]);
+        AuditService::record(Auth::user(), 'freelancer_account_deleted', 'FreelancerAccount', null, ['name' => $name]);
 
         return back()->with('success', "Freelancer account removed: {$name}");
     }
@@ -105,12 +106,14 @@ class FreelancerAccountController extends Controller
             'proposal_use_ai' => ['nullable', 'in:0,1'],
             'profile_title' => ['nullable', 'string', 'max:255'],
             'profile_summary' => ['nullable', 'string'],
+            'experience_years' => ['nullable', 'integer', 'min:0', 'max:50'],
+            'proposal_style' => ['nullable', 'string', 'max:50'],
             'portfolio_url' => ['nullable', 'url'],
             'portfolio_projects' => ['nullable', 'string'],
         ]);
 
         $data['api_url'] = $data['api_url'] ?? 'https://www.freelancer.com';
-        $data['is_active'] = $request->boolean('is_active', true);
+        $data['is_active'] = $request->boolean('is_active', false);
         $data['auto_submit_bids'] = $request->boolean('auto_submit_bids', false);
         $data['include_keywords'] = $this->splitCsv($data['include_keywords'] ?? '');
         $data['exclude_keywords'] = $this->splitCsv($data['exclude_keywords'] ?? '');
@@ -119,6 +122,8 @@ class FreelancerAccountController extends Controller
         $data['proposal_use_ai'] = $request->filled('proposal_use_ai') ? $request->boolean('proposal_use_ai') : null;
         $data['profile_title'] = $data['profile_title'] ?? null;
         $data['profile_summary'] = $data['profile_summary'] ?? null;
+        $data['experience_years'] = $request->filled('experience_years') ? $request->integer('experience_years') : 5;
+        $data['proposal_style'] = $data['proposal_style'] ?? 'direct';
         $data['portfolio_url'] = $data['portfolio_url'] ?? null;
         $data['portfolio_projects'] = \App\Models\FreelancerAccount::parsePortfolioProjects($data['portfolio_projects'] ?? '');
 
