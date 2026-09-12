@@ -39,9 +39,8 @@
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
                 @else
-                    <a href="{{ route('login') }}" class="btn btn-outline btn-sm">Sign in</a>
-                    <a href="{{ route('register') }}" class="btn btn-primary btn-sm btn-glow">
-                        <span>Get Started Free</span> <i class="bi bi-arrow-right-short"></i>
+                    <a href="{{ route('login') }}" class="btn btn-primary btn-sm btn-glow">
+                        <span>Sign in</span> <i class="bi bi-arrow-right-short"></i>
                     </a>
                 @endauth
                 <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
@@ -64,8 +63,7 @@
             @auth
                 <a href="{{ route('dashboard') }}" class="btn btn-primary w-100"><i class="bi bi-speedometer2"></i> Open Dashboard</a>
             @else
-                <a href="{{ route('login') }}" class="btn btn-secondary w-100">Sign in to Account</a>
-                <a href="{{ route('register') }}" class="btn btn-primary w-100">Start Finding Work</a>
+                <a href="{{ route('login') }}" class="btn btn-primary w-100">Sign in to Account</a>
             @endauth
         </div>
     </div>
@@ -89,9 +87,9 @@
                 </p>
 
                 <div class="hero-cta-group">
-                    <a href="{{ route('register') }}" class="btn btn-primary btn-lg btn-glow">
+                    <a href="{{ route('login') }}" class="btn btn-primary btn-lg btn-glow">
                         <i class="bi bi-rocket-takeoff"></i>
-                        <span>Start Finding Projects Free</span>
+                        <span>Sign In to Dashboard</span>
                     </a>
                     <a href="#workflow" class="btn btn-secondary btn-lg">
                         <i class="bi bi-play-circle"></i>
@@ -495,11 +493,8 @@
                         Stop hunting manually. Join modern agencies and freelancers building automated sales pipelines with LeadForge AI.
                     </p>
                     <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
-                        <a href="{{ route('register') }}" class="btn btn-primary btn-lg btn-glow">
+                        <a href="{{ route('login') }}" class="btn btn-primary btn-lg btn-glow">
                             <i class="bi bi-lightning-charge-fill"></i>
-                            <span>Create Free Account</span>
-                        </a>
-                        <a href="{{ route('login') }}" class="btn btn-secondary btn-lg">
                             <span>Sign in to Dashboard</span>
                         </a>
                     </div>
@@ -536,11 +531,11 @@
                 <div class="footer-col">
                     <h4>Modules</h4>
                     <ul>
-                        <li><a href="{{ route('register') }}">Discovery Campaigns</a></li>
-                        <li><a href="{{ route('register') }}">AI Website Scan</a></li>
-                        <li><a href="{{ route('register') }}">Opportunity Matrix</a></li>
-                        <li><a href="{{ route('register') }}">Deal Pipeline</a></li>
-                        <li><a href="{{ route('register') }}">Email Automation</a></li>
+                        <li><a href="{{ route('login') }}">Discovery Campaigns</a></li>
+                        <li><a href="{{ route('login') }}">AI Website Scan</a></li>
+                        <li><a href="{{ route('login') }}">Opportunity Matrix</a></li>
+                        <li><a href="{{ route('login') }}">Deal Pipeline</a></li>
+                        <li><a href="{{ route('login') }}">Email Automation</a></li>
                     </ul>
                 </div>
 
