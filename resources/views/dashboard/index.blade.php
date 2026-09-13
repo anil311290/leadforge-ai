@@ -10,7 +10,7 @@
     </div>
 </div>
 
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4 dashboard-stats">
     <div class="col-6 col-md-4 col-xl-3">
         <a href="{{ route('leads.index') }}" class="card p-3 shadow-sm d-block text-decoration-none text-dark">
             <div class="d-flex align-items-center gap-3">
@@ -101,7 +101,7 @@
     </div>
 </div>
 
-<div class="row g-3">
+<div class="row g-3 dashboard-content">
     <div class="col-12 col-xl-7">
         <div class="card p-3 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-2">

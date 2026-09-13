@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/toastr/toastr.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}?v={{ filemtime(public_path('assets/css/app.css')) }}">
     <script src="{{ asset('assets/vendor/chartjs/chart.umd.min.js') }}" defer></script>
 </head>
 <body>
@@ -58,9 +58,9 @@
             <span class="badge bg-light text-muted border">{{ ucfirst(auth()->user()->role ?? 'user') }}</span>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <a href="{{ route('profile.index') }}" class="btn btn-sm btn-light"><i class="bi bi-person me-1"></i>Profile</a>
+            <a href="{{ route('profile.index') }}" class="btn btn-sm btn-light"><i class="bi bi-person me-md-1"></i><span class="topbar-label">Profile</span></a>
             <form method="POST" action="{{ route('logout') }}" class="d-inline">@csrf
-                <button type="submit" class="btn btn-sm btn-outline-danger" title="Sign out"><i class="bi bi-box-arrow-right me-1"></i>Sign out</button>
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Sign out"><i class="bi bi-box-arrow-right me-md-1"></i><span class="topbar-label">Sign out</span></button>
             </form>
         </div>
     </nav>
@@ -77,5 +77,5 @@
 <script src="{{ asset('assets/vendor/chartjs/chart.umd.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/toastr/toastr.min.js') }}"></script>
-<script src="{{ asset('assets/js/app.js') }}"></script>
+<script src="{{ asset('assets/js/app.js') }}?v={{ filemtime(public_path('assets/js/app.js')) }}"></script>
 @yield('scripts')
