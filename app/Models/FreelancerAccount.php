@@ -16,6 +16,8 @@ class FreelancerAccount extends Model
         'is_active',
         'auto_submit_bids',
         'max_bids_per_day',
+        'max_project_bids',
+        'max_project_age_hours',
         'budget_min',
         'budget_min_currency',
         'include_keywords',

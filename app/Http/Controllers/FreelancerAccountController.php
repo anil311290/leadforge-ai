@@ -96,6 +96,8 @@ class FreelancerAccountController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'auto_submit_bids' => ['nullable', 'boolean'],
             'max_bids_per_day' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'max_project_bids' => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'max_project_age_hours' => ['nullable', 'integer', 'min:0', 'max:720'],
             'budget_min' => ['nullable', 'numeric', 'min:0'],
             'budget_min_currency' => ['nullable', 'string', 'max:8'],
             'include_keywords' => ['nullable', 'string'],

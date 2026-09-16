@@ -11,6 +11,8 @@
     <div class="col-md-4"><label class="form-label fw-semibold">API base URL</label><input type="url" name="api_url" class="form-control" value="{{ old('api_url', $account->api_url ?? 'https://www.freelancer.com') }}"></div>
 
     <div class="col-md-4"><label class="form-label fw-semibold">Max bids / day</label><input type="number" min="1" max="200" name="max_bids_per_day" class="form-control" value="{{ old('max_bids_per_day', $account->max_bids_per_day ?? 10) }}"></div>
+    <div class="col-md-4"><label class="form-label fw-semibold">Max existing project bids</label><input type="number" min="0" max="10000" name="max_project_bids" class="form-control" value="{{ old('max_project_bids', $account->max_project_bids ?? 20) }}"><div class="form-text">Skip projects that already have more bids. Use 0 for no limit.</div></div>
+    <div class="col-md-4"><label class="form-label fw-semibold">Max project age (hours)</label><input type="number" min="0" max="720" name="max_project_age_hours" class="form-control" value="{{ old('max_project_age_hours', $account->max_project_age_hours ?? 24) }}"><div class="form-text">Skip projects posted earlier. Use 0 for no limit.</div></div>
     <div class="col-md-4"><label class="form-label fw-semibold">Min budget</label><input type="number" min="0" name="budget_min" class="form-control" value="{{ old('budget_min', $account->budget_min ?? 0) }}"></div>
     <div class="col-md-4"><label class="form-label fw-semibold">Budget currency</label><input type="text" name="budget_min_currency" class="form-control" value="{{ old('budget_min_currency', $account->budget_min_currency ?? 'USD') }}"></div>
 

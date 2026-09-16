@@ -3,6 +3,7 @@
 namespace App\Services\Freelancer;
 
 use App\Models\FreelancerAccount;
+use Carbon\Carbon;
 
 /**
  * Decides whether a Freelancer.com project is worth bidding on for a given account,
@@ -35,6 +36,16 @@ class BidEligibilityService
             if (! $matched) {
                 return [false, 'no matching skill keywords'];
             }
+        }
+
+        $bidCount = $this->extractBidCount($project);
+        if ($account->max_project_bids > 0 && $bidCount > $account->max_project_bids) {
+            return [false, "project already has {$bidCount} bids (limit {$account->max_project_bids})"];
+        }
+
+        $postedAt = $this->extractPostedAt($project);
+        if ($account->max_project_age_hours > 0 && $postedAt?->lt(now('UTC')->subHours($account->max_project_age_hours))) {
+            return [false, "project is older than {$account->max_project_age_hours} hours"];
         }
 
         [$budgetMin, ] = $this->extractBudget($project);
@@ -77,5 +88,34 @@ class BidEligibilityService
         $code = $loc['country_code'] ?? $loc['code'] ?? null;
 
         return $code ? mb_strtoupper((string) $code) : null;
+    }
+
+    public function extractBidCount(array $project): int
+    {
+        return max(0, (int) (
+            data_get($project, 'bid_stats.bid_count')
+            ?? data_get($project, 'bid_count')
+            ?? data_get($project, 'bids_count')
+            ?? 0
+        ));
+    }
+
+    public function extractPostedAt(array $project): ?Carbon
+    {
+        $value = data_get($project, 'time_submitted')
+            ?? data_get($project, 'time_created')
+            ?? data_get($project, 'time_posted');
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            return is_numeric($value)
+                ? Carbon::createFromTimestampUTC((int) $value)
+                : Carbon::parse((string) $value)->utc();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }
