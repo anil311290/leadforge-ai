@@ -11,11 +11,14 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Interval is read fresh on every schedule:run tick, so the UI setting takes effect without a deploy.
-$freelancerScanInterval = max(1, (int) FreelancerSettings::get('scan_interval_minutes', 15));
-
 Schedule::call(function () {
+    $freelancerScanInterval = max(1, (int) FreelancerSettings::get('scan_interval_minutes', 15));
+
+    if ((int) now()->minute % $freelancerScanInterval !== 0) {
+        return;
+    }
+
     FreelancerAccount::where('is_active', true)->pluck('id')->each(
         fn (int $id) => ScanFreelancerAccount::dispatch($id)
     );
-})->cron("*/{$freelancerScanInterval} * * * *")->name('freelancer-scan')->withoutOverlapping();
+})->everyMinute()->name('freelancer-scan')->withoutOverlapping();

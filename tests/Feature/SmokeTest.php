@@ -8,6 +8,8 @@ use Tests\TestCase;
 
 class SmokeTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function authenticated_pages_render_ok()
     {
