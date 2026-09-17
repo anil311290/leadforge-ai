@@ -14,8 +14,15 @@ class BidEligibilityService
     public function isEligible(array $project, FreelancerAccount $account): array
     {
         $title = (string) ($project['title'] ?? '');
-        $description = (string) ($project['preview_description'] ?? $project['description'] ?? '');
-        $text = mb_strtolower($title.' '.$description);
+        $description = (string) ($project['description'] ?? $project['preview_description'] ?? '');
+        $jobNames = implode(' ', array_filter(array_map(
+            fn ($job) => (string) ($job['name'] ?? ''),
+            (array) ($project['jobs'] ?? [])
+        )));
+        // Include the project's own skill tags, not just the title/description text,
+        // so a project genuinely matching the profile's skills isn't skipped just
+        // because it doesn't literally repeat the keyword in the free-text fields.
+        $text = mb_strtolower($title.' '.$description.' '.$jobNames);
 
         $exclude = array_map('mb_strtolower', $account->exclude_keywords ?: (array) FreelancerSettings::get('default_exclude_keywords', []));
         foreach ($exclude as $keyword) {
