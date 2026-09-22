@@ -24,4 +24,9 @@ class DataNormalizerTest extends TestCase
     {
         $this->assertSame('1234567890', DataNormalizer::normalizeWhatsappPhone('1234567890', 'Brazil'));
     }
+
+    public function test_location_can_identify_us_number_when_country_is_missing(): void
+    {
+        $this->assertSame('16174567890', DataNormalizer::normalizeWhatsappPhone('6174567890', null, 'Boston, MA'));
+    }
 }

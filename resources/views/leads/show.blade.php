@@ -3,7 +3,8 @@
 
 @section('content')
 @php
-    $whatsappPhone = \App\Services\Discovery\DataNormalizer::normalizeWhatsappPhone($lead->phone, $lead->country);
+    $leadLocation = trim(implode(', ', array_filter([$lead->city, $lead->state, $lead->location])));
+    $whatsappPhone = \App\Services\Discovery\DataNormalizer::normalizeWhatsappPhone($lead->phone, $lead->country, $leadLocation);
     $googleSearchUrl = 'https://www.google.com/search?q='.urlencode(trim($lead->company.' '.$lead->city.' '.$lead->location));
 @endphp
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">

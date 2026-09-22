@@ -81,7 +81,7 @@ class DataNormalizer
         return $digits;
     }
 
-    public static function normalizeWhatsappPhone(?string $phone, ?string $country = null): ?string
+    public static function normalizeWhatsappPhone(?string $phone, ?string $country = null, ?string $location = null): ?string
     {
         $digits = self::normalizePhone($phone);
         if (! $digits) {
@@ -93,7 +93,7 @@ class DataNormalizer
             return substr($digits, 2);
         }
 
-        $countryCode = self::countryCallingCode($country);
+        $countryCode = self::countryCallingCode($country) ?: self::locationCallingCode($location);
 
         if ($countryCode) {
             $national = ltrim($digits, '0');
@@ -134,5 +134,29 @@ class DataNormalizer
         ];
 
         return $codes[$value] ?? (preg_match('/^\+?(\d{1,3})$/', $value, $match) ? $match[1] : null);
+    }
+
+    public static function locationCallingCode(?string $location): ?string
+    {
+        if (! $location) {
+            return null;
+        }
+
+        $value = strtolower(trim($location));
+        $usStates = 'al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy|district of columbia|washington dc';
+
+        if (preg_match('/\b('.$usStates.')\b/i', $value) || preg_match('/\b(united states|usa|america)\b/i', $value)) {
+            return '1';
+        }
+
+        if (preg_match('/\b(united kingdom|uk|england|scotland|wales)\b/i', $value)) {
+            return '44';
+        }
+
+        if (preg_match('/\b(india|in)\b/i', $value)) {
+            return '91';
+        }
+
+        return null;
     }
 }
