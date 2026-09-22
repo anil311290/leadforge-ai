@@ -64,6 +64,24 @@
     <div class="col-6 col-md-3"><div class="card p-3 shadow-sm text-center"><div class="text-muted small">Status</div><div><span class="badge bg-light text-dark border">{{ $lead->status }}</span></div></div></div>
 </div>
 
+<div class="card shadow-sm mb-3">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <div class="fw-semibold">Website Status</div>
+            <div class="small text-muted">{{ $lead->businessWebsite ? $lead->businessWebsite->status : 'No website created yet' }}</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            @if($lead->businessWebsite)
+                <a href="{{ $lead->businessWebsite->public_url ?? '#'}}" target="_blank" class="btn btn-sm btn-outline-primary">Preview</a>
+                <a href="{{ route('website-builder.websites.edit', $lead->businessWebsite) }}" class="btn btn-sm btn-primary">Edit Website</a>
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="navigator.clipboard.writeText('{{ $lead->businessWebsite->public_url ?? '' }}')">Copy URL</button>
+            @else
+                <a href="{{ route('website-builder.websites.create', ['lead_id' => $lead->id]) }}" class="btn btn-sm btn-primary">Create Website</a>
+            @endif
+        </div>
+    </div>
+</div>
+
 @if($lead->phone && $whatsappPhone)
 <div class="mb-3">
     <a href="https://wa.me/{{ $whatsappPhone }}" target="_blank" class="btn btn-success btn-sm">

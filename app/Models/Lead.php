@@ -158,6 +158,11 @@ class Lead extends Model
         return $this->hasOne(AiAnalysis::class)->latestOfMany();
     }
 
+    public function businessWebsite()
+    {
+        return $this->hasOne(BusinessWebsite::class, 'lead_id');
+    }
+
     public function scopeHot($query)
     {
         return $query->whereIn('score_class', ['HOT', 'HIGH']);

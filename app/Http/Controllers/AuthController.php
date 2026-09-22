@@ -16,6 +16,21 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        return $this->authenticateUser($request, 'dashboard');
+    }
+
+    public function showWebsiteBuilderLogin()
+    {
+        return view('auth.login', ['isWebsiteBuilder' => true]);
+    }
+
+    public function loginWebsiteBuilder(Request $request)
+    {
+        return $this->authenticateUser($request, 'website-builder.dashboard');
+    }
+
+    protected function authenticateUser(Request $request, string $defaultDashboardRoute)
+    {
         $credentials = $this->validate($request, [
             'email' => ['required', 'email'],
             'password' => ['required'],
@@ -35,7 +50,11 @@ class AuthController extends Controller
 
         AuditService::record($user, 'user_login', 'User');
 
-        return redirect()->intended(route('dashboard'));
+        if ($user->role === 'website_builder') {
+            return redirect()->intended(route('website-builder.dashboard'));
+        }
+
+        return redirect()->intended(route($defaultDashboardRoute));
     }
 
     public function showRegister()

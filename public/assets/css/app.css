@@ -15,6 +15,45 @@ body {
     background: #f4f6fa;
 }
 
+/* Website Builder forms use a tighter editorial hierarchy than generic Bootstrap forms. */
+.website-builder-form h5 {
+    color: #17233d;
+    font-size: 1rem;
+    font-weight: 750;
+    letter-spacing: -0.01em;
+}
+
+.website-builder-form .section-copy {
+    color: #66758a;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.website-builder-form .form-label {
+    color: #34445b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.015em;
+    margin-bottom: 0.4rem;
+}
+
+.website-builder-form .form-control,
+.website-builder-form .form-select {
+    color: #1f2d43;
+    font-size: 0.9rem;
+}
+
+.website-builder-form .form-control::placeholder {
+    color: #9aa7b8;
+    opacity: 1;
+}
+
+.website-builder-form .form-note {
+    color: #64748b;
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
 /* Sidebar & Navigation */
 .sidebar {
     width: 250px;

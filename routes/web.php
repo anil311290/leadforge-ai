@@ -29,6 +29,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login']);
+    Route::get('website-builder/login', [AuthController::class, 'showWebsiteBuilderLogin'])->name('website-builder.login');
+    Route::post('website-builder/login', [AuthController::class, 'loginWebsiteBuilder'])->name('website-builder.login.submit');
     // Route::get('register', [AuthController::class, 'showRegister'])->name('register');
     // Route::post('register', [AuthController::class, 'register']);
     Route::get('forgot-password', [AuthController::class, 'showForgot'])->name('password.request');
@@ -38,9 +40,13 @@ Route::middleware('guest')->group(function () {
 Route::post('logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 Route::get('/', function () {
-    return Auth::check()
-        ? redirect()->route('dashboard')
-        : view('welcome');
+    if (! Auth::check()) {
+        return view('welcome');
+    }
+
+    return Auth::user()->isWebsiteBuilder()
+        ? redirect()->route('website-builder.dashboard')
+        : redirect()->route('dashboard');
 });
 
 /*
@@ -48,7 +54,7 @@ Route::get('/', function () {
 | Authenticated Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'not-website-builder'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Profile & notifications
@@ -141,4 +147,34 @@ Route::middleware('auth')->group(function () {
     Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit.index')->middleware('role:admin');
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index')->middleware('role:admin');
     Route::post('settings', [SettingsController::class, 'update'])->name('settings.update')->middleware('role:admin');
+
+    Route::prefix('website-builder')->name('website-builder.')->middleware('role:website_builder,admin')->withoutMiddleware('not-website-builder')->group(function () {
+        Route::get('dashboard', [\App\Http\Controllers\WebsiteBuilder\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('websites', [\App\Http\Controllers\WebsiteBuilder\WebsiteController::class, 'index'])->name('websites.index');
+        Route::get('websites/create', [\App\Http\Controllers\WebsiteBuilder\WebsiteController::class, 'create'])->name('websites.create');
+        Route::post('websites', [\App\Http\Controllers\WebsiteBuilder\WebsiteController::class, 'store'])->name('websites.store');
+        Route::get('websites/{businessWebsite}/preview', [\App\Http\Controllers\WebsiteBuilder\PublicWebsiteController::class, 'preview'])->name('websites.preview');
+        Route::get('websites/{businessWebsite}/edit', [\App\Http\Controllers\WebsiteBuilder\WebsiteController::class, 'edit'])->name('websites.edit');
+        Route::patch('websites/{businessWebsite}', [\App\Http\Controllers\WebsiteBuilder\WebsiteController::class, 'update'])->name('websites.update');
+        Route::post('websites/{businessWebsite}/generate-ai-content', [\App\Http\Controllers\WebsiteBuilder\WebsiteController::class, 'generateAiContent'])->name('websites.generate-ai-content');
+        Route::post('websites/{businessWebsite}/publish', [\App\Http\Controllers\WebsiteBuilder\WebsiteController::class, 'publish'])->name('websites.publish');
+        Route::post('websites/{businessWebsite}/unpublish', [\App\Http\Controllers\WebsiteBuilder\WebsiteController::class, 'unpublish'])->name('websites.unpublish');
+        Route::delete('websites/{businessWebsite}', [\App\Http\Controllers\WebsiteBuilder\WebsiteController::class, 'destroy'])->name('websites.destroy');
+        Route::get('templates', [\App\Http\Controllers\WebsiteBuilder\TemplateController::class, 'index'])->name('templates.index');
+        Route::get('websites/{businessWebsite}/media', [\App\Http\Controllers\WebsiteBuilder\MediaController::class, 'index'])->name('media.index');
+        Route::post('websites/{businessWebsite}/media', [\App\Http\Controllers\WebsiteBuilder\MediaController::class, 'store'])->name('media.store');
+        Route::post('websites/{businessWebsite}/item-image', [\App\Http\Controllers\WebsiteBuilder\MediaController::class, 'storeItemImage'])->name('media.item-image.store');
+        Route::post('websites/{businessWebsite}/generate-image', [\App\Http\Controllers\WebsiteBuilder\MediaController::class, 'generate'])->name('media.generate');
+        Route::delete('websites/{businessWebsite}/media/{media}', [\App\Http\Controllers\WebsiteBuilder\MediaController::class, 'destroy'])->name('media.destroy');
+        Route::get('settings', [\App\Http\Controllers\WebsiteBuilder\SettingsController::class, 'index'])->name('settings.index');
+        Route::post('settings', [\App\Http\Controllers\WebsiteBuilder\SettingsController::class, 'update'])->name('settings.update');
+    });
 });
+
+Route::get('/{slug}', [\App\Http\Controllers\WebsiteBuilder\PublicWebsiteController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9-]+')
+    ->name('public.website.show');
+
+Route::post('/{slug}/enquiry', [\App\Http\Controllers\WebsiteBuilder\PublicWebsiteController::class, 'storeEnquiry'])
+    ->where('slug', '[A-Za-z0-9-]+')
+    ->name('public.website.enquiry');

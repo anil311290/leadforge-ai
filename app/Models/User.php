@@ -74,4 +74,9 @@ class User extends Authenticatable
     {
         return $this->role === 'admin';
     }
+
+    public function isWebsiteBuilder(): bool
+    {
+        return $this->role === 'website_builder';
+    }
 }

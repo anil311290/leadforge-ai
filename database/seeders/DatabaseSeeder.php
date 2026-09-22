@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
         $this->seedPromptTemplates();
         $this->seedSettings();
         $this->call(FreelancerAccountSeeder::class);
+        $this->call(WebsiteBuilderTemplateSeeder::class);
+        $this->call(WebsiteBuilderUserSeeder::class);
     }
 
     protected function seedUsers(): void

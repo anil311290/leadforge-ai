@@ -38,6 +38,7 @@ return [
     'ai' => [
         'provider' => env('LF_AI_PROVIDER', 'openai'),
         'model' => env('LF_AI_MODEL', 'gpt-4o-mini'),
+        'image_model' => env('LF_AI_IMAGE_MODEL', 'gpt-image-1'),
         'api_key' => env('LF_AI_API_KEY'),
         'base_url' => env('LF_AI_BASE_URL'),
         'timeout' => env('LF_AI_TIMEOUT', 60),

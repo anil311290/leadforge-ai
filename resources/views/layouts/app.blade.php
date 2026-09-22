@@ -18,6 +18,13 @@
 <nav class="sidebar" id="sidebar">
     <div class="brand"><i class="bi bi-lightning-charge-fill"></i> LeadForge <span>AI</span></div>
     <div class="sidebar-nav">
+        @if(auth()->user() && auth()->user()->isWebsiteBuilder())
+        <div class="sidebar-section">Website Builder</div>
+        <a class="nav-link {{ request()->routeIs('website-builder.dashboard') ? 'active' : '' }}" href="{{ route('website-builder.dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a class="nav-link {{ request()->routeIs('website-builder.websites.*') ? 'active' : '' }}" href="{{ route('website-builder.websites.index') }}"><i class="bi bi-window-stack"></i> Websites</a>
+        <a class="nav-link {{ request()->routeIs('website-builder.templates.*') ? 'active' : '' }}" href="{{ route('website-builder.templates.index') }}"><i class="bi bi-layout-text-window-reverse"></i> Templates</a>
+        <a class="nav-link {{ request()->routeIs('website-builder.settings.*') ? 'active' : '' }}" href="{{ route('website-builder.settings.index') }}"><i class="bi bi-gear"></i> Settings</a>
+        @else
         <div class="sidebar-section">Workspace</div>
         <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
         <a class="nav-link {{ request()->routeIs('campaigns.*') ? 'active' : '' }}" href="{{ route('campaigns.index') }}"><i class="bi bi-bullseye"></i> Find Projects</a>
@@ -41,6 +48,7 @@
         <a class="nav-link {{ request()->routeIs('audit.*') ? 'active' : '' }}" href="{{ route('audit.index') }}"><i class="bi bi-shield-lock"></i> Audit Trail</a>
         <a class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.index') }}"><i class="bi bi-gear"></i> Settings</a>
         @endif
+        @endif
     </div>
     <div class="sidebar-footer">
         <form method="POST" action="{{ route('logout') }}">@csrf
@@ -58,7 +66,9 @@
             <span class="badge bg-light text-muted border">{{ ucfirst(auth()->user()->role ?? 'user') }}</span>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <a href="{{ route('profile.index') }}" class="btn btn-sm btn-light"><i class="bi bi-person me-md-1"></i><span class="topbar-label">Profile</span></a>
+            @if(! auth()->user()->isWebsiteBuilder())
+                <a href="{{ route('profile.index') }}" class="btn btn-sm btn-light"><i class="bi bi-person me-md-1"></i><span class="topbar-label">Profile</span></a>
+            @endif
             <form method="POST" action="{{ route('logout') }}" class="d-inline">@csrf
                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Sign out"><i class="bi bi-box-arrow-right me-md-1"></i><span class="topbar-label">Sign out</span></button>
             </form>
