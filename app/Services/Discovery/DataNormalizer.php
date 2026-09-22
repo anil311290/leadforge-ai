@@ -81,34 +81,58 @@ class DataNormalizer
         return $digits;
     }
 
-    public static function normalizeWhatsappPhone(?string $phone, string $countryCode = '91'): ?string
+    public static function normalizeWhatsappPhone(?string $phone, ?string $country = null): ?string
     {
-        $mobile = self::normalizeIndianMobile($phone);
-        if ($mobile) {
-            return $countryCode.$mobile;
-        }
-
         $digits = self::normalizePhone($phone);
         if (! $digits) {
             return null;
         }
 
-        if (str_starts_with($digits, '0'.$countryCode) && strlen($digits) === strlen($countryCode) + 11) {
-            return substr($digits, 1);
+        // A number with an international prefix is already WhatsApp-ready.
+        if (str_starts_with($digits, '00')) {
+            return substr($digits, 2);
         }
 
-        if (str_starts_with($digits, $countryCode) && strlen($digits) === strlen($countryCode) + 10) {
-            return $digits;
+        $countryCode = self::countryCallingCode($country);
+
+        if ($countryCode) {
+            $national = ltrim($digits, '0');
+
+            if (str_starts_with($national, $countryCode) && strlen($national) > strlen($countryCode) + 6) {
+                return $national;
+            }
+
+            return $countryCode.$national;
         }
 
-        if (strlen($digits) === 11 && str_starts_with($digits, '0')) {
-            return $countryCode.substr($digits, 1);
+        // Infer India only when the local number matches India's mobile format.
+        $indianMobile = self::normalizeIndianMobile($phone);
+        if ($indianMobile) {
+            return '91'.$indianMobile;
         }
 
-        if (strlen($digits) === 10) {
-            return $countryCode.$digits;
-        }
-
+        // Without a country, do not invent a calling code for unknown numbers.
         return $digits;
+    }
+
+    public static function countryCallingCode(?string $country): ?string
+    {
+        if (! $country) {
+            return null;
+        }
+
+        $value = strtolower(trim($country));
+        $codes = [
+            'india' => '91', 'in' => '91', '+91' => '91',
+            'united states' => '1', 'united states of america' => '1', 'usa' => '1', 'us' => '1', '+1' => '1',
+            'canada' => '1', 'ca' => '1',
+            'united kingdom' => '44', 'uk' => '44', 'gb' => '44', '+44' => '44',
+            'australia' => '61', 'au' => '61', '+61' => '61',
+            'united arab emirates' => '971', 'uae' => '971', 'ae' => '971', '+971' => '971',
+            'singapore' => '65', 'sg' => '65', '+65' => '65',
+            'germany' => '49', 'de' => '49', '+49' => '49',
+        ];
+
+        return $codes[$value] ?? (preg_match('/^\+?(\d{1,3})$/', $value, $match) ? $match[1] : null);
     }
 }

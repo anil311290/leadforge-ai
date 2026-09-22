@@ -21,6 +21,17 @@
                 <form method="POST" action="{{ route('campaigns.store') }}" id="campaignCreateForm">
                     @csrf
 
+                    @if($errors->any())
+                        <div class="alert alert-danger" role="alert">
+                            <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Please fix the following:</div>
+                            <ul class="mb-0 ps-3">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <!-- Location -->
                     <div class="mb-4">
                         <label class="form-label fw-semibold d-flex align-items-center gap-1">
@@ -29,6 +40,7 @@
                         <input type="text" name="location" class="form-control" required
                                placeholder="e.g. Mumbai, Pune, Bengaluru (SMEs &amp; Growing Companies)"
                                value="{{ old('location') }}">
+                           @error('location')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         <div class="form-text mt-1">
                             <i class="bi bi-info-circle me-1"></i>The geographic area or market segment you want to prospect.
                         </div>
@@ -49,6 +61,7 @@
                             </label>
                             <input type="number" step="any" min="0" name="radius_km" class="form-control"
                                    placeholder="Optional" value="{{ old('radius_km') }}">
+                            @error('radius_km')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold d-flex align-items-center gap-1">
@@ -56,6 +69,7 @@
                             </label>
                             <input type="number" min="0" max="100" name="min_score" class="form-control"
                                    value="{{ old('min_score', 0) }}">
+                            @error('min_score')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold d-flex align-items-center gap-1">
@@ -63,6 +77,7 @@
                             </label>
                             <input type="number" min="1" max="500" name="max_businesses" class="form-control"
                                    placeholder="Optional" value="{{ old('max_businesses') }}">
+                            @error('max_businesses')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                     </div>
 

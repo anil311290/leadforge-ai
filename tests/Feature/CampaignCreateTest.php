@@ -36,4 +36,18 @@ class CampaignCreateTest extends TestCase
         ]);
         $this->assertSame(1, Campaign::where('name', 'Jaipur Medical Leads')->count());
     }
+
+    public function test_campaign_create_form_displays_validation_errors(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($user)->from(route('campaigns.create'))->post(route('campaigns.store'), [
+            'location' => '',
+            'min_score' => 101,
+        ]);
+
+        $response->assertRedirect(route('campaigns.create'));
+        $response->assertSessionHasErrors(['location', 'min_score']);
+        $response->assertSessionHas('errors');
+    }
 }
