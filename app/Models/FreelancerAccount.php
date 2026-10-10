@@ -88,14 +88,19 @@ class FreelancerAccount extends Model
 
     public function todayBidCount(): int
     {
-        $tz = config('app.timezone', 'Asia/Kolkata');
-
-        $startOfDay = now($tz)->startOfDay()->utc();
-        $endOfDay = now($tz)->endOfDay()->utc();
+        // Timestamps are stored in the app timezone, so compare against the local day (no UTC shift).
+        $startOfDay = now()->startOfDay();
+        $endOfDay = now()->endOfDay();
 
         return $this->bids()
-            ->whereIn('status', ['submitted', 'pending'])
-            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->where(function ($q) use ($startOfDay, $endOfDay) {
+                $q->where('status', 'submitted')->whereBetween('submitted_at', [$startOfDay, $endOfDay]);
+
+                // Drafts only use up the daily quota when this account is in manual-approval mode.
+                if (! $this->auto_submit_bids) {
+                    $q->orWhere(fn ($q) => $q->where('status', 'pending')->whereBetween('created_at', [$startOfDay, $endOfDay]));
+                }
+            })
             ->count();
     }
 
