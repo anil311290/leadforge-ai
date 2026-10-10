@@ -4,6 +4,7 @@ namespace App\Services\Freelancer;
 
 use App\Models\FreelancerAccount;
 use App\Services\Ai\AiClient;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Builds a bid proposal (cover letter) for a project. Uses the configured AI
@@ -12,9 +13,7 @@ use App\Services\Ai\AiClient;
  */
 class ProposalGenerator
 {
-    public function __construct(protected AiClient $ai)
-    {
-    }
+    public function __construct(protected AiClient $ai) {}
 
     public function generate(array $project, FreelancerAccount $account): string
     {
@@ -46,28 +45,28 @@ class ProposalGenerator
                 };
 
                 $prompt = "Write a professional, easy-to-understand freelance bid proposal (130-200 words) for this project.\n\n"
-                    ."Project Title: {$title}\n"
-                    ."Project Description: {$description}\n\n"
-                    ."Freelancer Profile Reference (FOR BACKGROUND CONTEXT ONLY):\n"
-                    ."- Developer Name: {$signOff}\n"
-                    ."- Experience Level: {$experienceYears}+ years of hands-on professional development\n"
-                    ."- Title: {$profileTitle}\n"
-                    ."- Background Context: {$profileSummary}\n"
-                    ."- Preferred Proposal Writing Style: {$styleGuidelines}\n\n"
-                    ."CRITICAL PROPOSAL REQUIREMENTS:\n"
-                    ."- DO NOT COPY OR PASTE THE BACKGROUND CONTEXT VERBATIM INTO THE PROPOSAL. Use it ONLY to inform your understanding of the developer's background.\n"
-                    ."- The proposal MUST be written 100% specifically about the client's project description and requirements.\n"
-                    ."- Explain how you will solve their specific requirements, build requested features, and deliver the project.\n"
-                    ."- Every proposal must be 100% UNIQUE in phrasing, sentence structure, opening hook, and technical framing for account '{$signOff}'.\n"
-                    ."- Explicitly reflect {$signOff}'s {$experienceYears}+ years of experience and specialized perspective.\n"
-                    ."- Use short paragraphs separated by a blank line (\\n\\n).\n"
-                    ."- If listing distinct deliverables, use a bullet list with lines starting with \"- \".\n"
-                    ."- Do not use placeholders like [Client's Name] or [Your Name]. Start with a clean greeting like \"Hi,\".\n"
-                    .($wantsPortfolio
-                        ? "- Mention ONLY these relevant past project link(s) for the requested portfolio: ".$this->formatLinksForPrompt($links, $wantsAdminDemo)."\n"
+                    . "Project Title: {$title}\n"
+                    . "Project Description: {$description}\n\n"
+                    . "Freelancer Profile Reference (FOR BACKGROUND CONTEXT ONLY):\n"
+                    . "- Developer Name: {$signOff}\n"
+                    . "- Experience Level: {$experienceYears}+ years of hands-on professional development\n"
+                    . "- Title: {$profileTitle}\n"
+                    . "- Background Context: {$profileSummary}\n"
+                    . "- Preferred Proposal Writing Style: {$styleGuidelines}\n\n"
+                    . "CRITICAL PROPOSAL REQUIREMENTS:\n"
+                    . "- DO NOT COPY OR PASTE THE BACKGROUND CONTEXT VERBATIM INTO THE PROPOSAL. Use it ONLY to inform your understanding of the developer's background.\n"
+                    . "- The proposal MUST be written 100% specifically about the client's project description and requirements.\n"
+                    . "- Explain how you will solve their specific requirements, build requested features, and deliver the project.\n"
+                    . "- Every proposal must be 100% UNIQUE in phrasing, sentence structure, opening hook, and technical framing for account '{$signOff}'.\n"
+                    . "- Explicitly reflect {$signOff}'s {$experienceYears}+ years of experience and specialized perspective.\n"
+                    . "- Use short paragraphs separated by a blank line (\\n\\n).\n"
+                    . "- If listing distinct deliverables, use a bullet list with lines starting with \"- \".\n"
+                    . "- Do not use placeholders like [Client's Name] or [Your Name]. Start with a clean greeting like \"Hi,\".\n"
+                    . ($wantsPortfolio
+                        ? "- Mention ONLY these relevant past project link(s) for the requested portfolio: " . $this->formatLinksForPrompt($links, $wantsAdminDemo) . "\n"
                         : "- Do not mention any portfolio URL as it was not explicitly requested.\n")
-                    ."- End with a sign-off on its own line: \"Best regards,\" followed by \"{$signOff}\".\n"
-                    .'Respond in valid JSON format: {"proposal": "..."}';
+                    . "- End with a sign-off on its own line: \"Best regards,\" followed by \"{$signOff}\".\n"
+                    . 'Respond in valid JSON format: {"proposal": "..."}';
 
                 $systemPrompt = "You write distinct, high-converting, professional freelance bid proposals tailored for developer '{$signOff}' ({$experienceYears}+ years experience).";
 
@@ -77,7 +76,10 @@ class ProposalGenerator
                     return $this->sanitize((string) $decoded['proposal'], $account, $wantsPortfolio, $wantsAdminDemo);
                 }
             } catch (\Throwable $e) {
-                // fall through to template below
+                Log::warning('AI proposal generation failed; using template fallback', [
+                    'account_id' => $account->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 
@@ -94,7 +96,7 @@ class ProposalGenerator
         $signOff = $this->signOffName($account);
 
         // Drop a client-name greeting placeholder entirely (e.g. "Dear [Client's Name],").
-        $text = preg_replace('/^(Dear|Hi|Hello)\s*\[[^\]]*\],?\s*/im', 'Hi,'."\n\n", $text, 1) ?? $text;
+        $text = preg_replace('/^(Dear|Hi|Hello)\s*\[[^\]]*\],?\s*/im', 'Hi,' . "\n\n", $text, 1) ?? $text;
 
         // Replace any remaining "[Your Name]" / "[Name]" style placeholder with the real sign-off.
         $text = preg_replace('/\[(your name|name|client\'?s? name)\]/i', $signOff, $text) ?? $text;
@@ -102,7 +104,7 @@ class ProposalGenerator
         // Safety net: strip any portfolio/website link that wasn't explicitly offered.
         if (! $wantsPortfolio) {
             foreach ($this->allAccountUrls($account) as $url) {
-                $text = preg_replace('/\s*'.preg_quote($url, '/').'\S*/i', '', $text) ?? $text;
+                $text = preg_replace('/\s*' . preg_quote($url, '/') . '\S*/i', '', $text) ?? $text;
             }
         }
 
@@ -110,7 +112,7 @@ class ProposalGenerator
         if (! $wantsAdminDemo) {
             foreach ($account->portfolio_projects ?? [] as $project) {
                 if (! empty($project['demo_admin_url'])) {
-                    $text = preg_replace('/\s*'.preg_quote($project['demo_admin_url'], '/').'\S*/i', '', $text) ?? $text;
+                    $text = preg_replace('/\s*' . preg_quote($project['demo_admin_url'], '/') . '\S*/i', '', $text) ?? $text;
                 }
                 if (! empty($project['demo_credentials'])) {
                     $text = str_ireplace($project['demo_credentials'], '', $text);
@@ -150,7 +152,7 @@ class ProposalGenerator
      */
     protected function relevantLinks(FreelancerAccount $account, string $title, string $description): array
     {
-        $haystack = mb_strtolower($title.' '.$description);
+        $haystack = mb_strtolower($title . ' ' . $description);
         $scored = [];
 
         foreach ($account->portfolio_projects ?? [] as $project) {
@@ -173,14 +175,14 @@ class ProposalGenerator
             }
         }
 
-        usort($scored, fn ($a, $b) => $b['score'] <=> $a['score']);
+        usort($scored, fn($a, $b) => $b['score'] <=> $a['score']);
         $top = array_slice($scored, 0, 2);
 
         if (empty($top)) {
             return [['title' => 'Similar work', 'url' => $this->portfolioUrl($account), 'demo_admin_url' => '', 'demo_credentials' => '']];
         }
 
-        return array_map(fn ($m) => [
+        return array_map(fn($m) => [
             'title' => $m['title'],
             'url' => $m['url'],
             'demo_admin_url' => $m['demo_admin_url'],
@@ -235,14 +237,14 @@ class ProposalGenerator
     {
         $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $description = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        [$profileTitle, ] = $this->profile($account);
+        [$profileTitle,] = $this->profile($account);
         $exp = (int) ($account->experience_years ?: 5);
         $style = $account->proposal_style ?: 'direct';
         $portfolioLine = '';
 
         if ($this->wantsPortfolioLink($description)) {
             $links = $this->relevantLinks($account, $title, $description);
-            $portfolioLine = "\n\nRelevant past work: ".$this->formatLinksForPrompt($links, $this->wantsAdminDemoAccess($description));
+            $portfolioLine = "\n\nRelevant past work: " . $this->formatLinksForPrompt($links, $this->wantsAdminDemoAccess($description));
         }
 
         $intros = [
@@ -257,16 +259,16 @@ class ProposalGenerator
         $solution = $this->buildTailoredSolution($title, $description, $profileTitle, $exp);
 
         $text = "{$intro}\n\n"
-            ."{$solution}{$portfolioLine}\n\n"
-            ."I'd like to discuss your project requirements in detail and get started promptly. Looking forward to connecting.\n\n"
-            ."Best regards,\n{$this->signOffName($account)}";
+            . "{$solution}{$portfolioLine}\n\n"
+            . "I'd like to discuss your project requirements in detail and get started promptly. Looking forward to connecting.\n\n"
+            . "Best regards,\n{$this->signOffName($account)}";
 
         return trim(html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 
     protected function buildTailoredSolution(string $title, string $description, string $profileTitle, int $exp): string
     {
-        $combined = strtolower($title.' '.$description);
+        $combined = strtolower($title . ' ' . $description);
         $highlights = [];
 
         if (str_contains($combined, 'api') || str_contains($combined, 'rest') || str_contains($combined, 'integration') || str_contains($combined, 'webhook')) {

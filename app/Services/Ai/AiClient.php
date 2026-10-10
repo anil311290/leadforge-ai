@@ -44,8 +44,8 @@ class AiClient
         };
 
         $endpoint = in_array($this->provider, ['ollama']) && ! $this->baseUrl
-            ? $base.'/api/chat'
-            : $base.'/chat/completions';
+            ? $base . '/api/chat'
+            : $base . '/chat/completions';
 
         $timeout = (int) config('leadforge.ai.timeout', 60);
 
@@ -59,7 +59,7 @@ class AiClient
         $payload = [
             'model' => $this->model,
             'messages' => [
-                ['role' => 'system', 'content' => 'You are an exact, structured business analysis engine.'],
+                ['role' => 'system', 'content' => $system . "\nReturn valid json matching the requested response format."],
                 ['role' => 'user', 'content' => $prompt],
             ],
             'temperature' => (float) ($options['temperature'] ?? config('leadforge.ai.temperature', 0.4)),
@@ -70,7 +70,7 @@ class AiClient
         $response = $request->post($endpoint, $payload);
 
         if ($response->failed()) {
-            throw new \RuntimeException('AI API error '.$response->status().': '.$response->body());
+            throw new \RuntimeException('AI API error ' . $response->status() . ': ' . $response->body());
         }
 
         $content = $response->json('choices.0.message.content');
